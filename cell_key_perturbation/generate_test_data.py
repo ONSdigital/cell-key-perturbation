@@ -13,7 +13,7 @@ np.random.seed(111)
 
 size=1000
 
-record_key_sample = list(np.random.randint(0,255,size))
+record_key_sample = list(np.random.randint(0,256,size))
 
 var1 = list(np.random.choice([1,2,3,4,5], p=[0.25, 0.35, 0.2, 0.1, 0.1], size=(size)))
 var2 = list(np.random.choice([1,2], p=[0.5, 0.5], size=(size)))
