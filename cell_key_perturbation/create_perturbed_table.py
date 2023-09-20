@@ -87,11 +87,17 @@ def create_perturbed_table(data, geog, tab_vars, record_key, ptable):
                        dropna=False,
                        aggfunc = sum).reset_index()
     
+    max_ckey = ptable["ckey"].max()
+    max_rkey = data[record_key].max()
+    
+    if max_ckey!=max_rkey:
+        print("The ranges of record keys and cell keys appear to be different. The maximum record key is ",max_rkey,", whereas the maximum cell key is ",max_ckey,". Please check you are using the appropriate ptable for this data")
+    
     ckeys_table = data.groupby(geog+tab_vars).agg(
          ckey = (record_key,'sum'),
          ).reset_index()   
     
-    ckeys_table["ckey"] = ckeys_table["ckey"]%256
+    ckeys_table["ckey"] = ckeys_table["ckey"]%(max_ckey+1)
 
     aggregated_table = aggregated_table.merge(ckeys_table,how ='left',on = geog + tab_vars)
 
@@ -117,6 +123,7 @@ def create_perturbed_table(data, geog, tab_vars, record_key, ptable):
     aggregated_table["count"] = aggregated_table["rs_cv"] + aggregated_table["pvalue"]     
 
     return aggregated_table
+
 
 
 if __name__ == "__main__":
