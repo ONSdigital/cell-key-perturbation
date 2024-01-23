@@ -1,0 +1,28 @@
+name: Build and publish on PyPI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  build-pub:
+    name: Build and publish on PyPI
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.6.15"
+      - name: Install flit
+        run: >-
+          python3 -m
+          pip install flit --user
+      - name: Build a wheel and source tarball
+        run: >-
+          python3 -m flit build
+      - name: Publish to PyPI
+        run: >-
+          FLIT_USERNAME=__token__ FLIT_PASSWORD=${{ secrets.PYPI_API_TOKEN }} flit publish
