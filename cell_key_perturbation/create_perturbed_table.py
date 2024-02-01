@@ -69,14 +69,34 @@ def create_perturbed_table(data, geog, tab_vars, record_key, ptable):
                                         tab_vars = ["Sex","Industry","Occupation"],
                                         ptable = ptable_10_5)
 
-
-    >>> perturbed_table 
-
-    >>> print("hello world")
-    hello world
-
-
     """
+    # Input checks ============================================================
+    # 1. Type validation on input data & ptable
+    # 2. Check that at least one variable specified for geog or tab_vars
+    # 3. Check variable is specified for record_key
+    # 4. Check geog, tab_vars & record_key specified are columns in data
+    # 5. Check ptable contains required columns
+    # ------------------------------------------------------------------------
+    if not (isinstance(data, pd.DataFrame)):
+        raise TypeError("Specified value for data must be a Pandas Dataframe.")
+    if not (isinstance(ptable, pd.DataFrame)):
+        raise TypeError("Specified value for ptable must be a Pandas Dataframe.")
+    if ((len(geog)==0) & (len(tab_vars)==0)):
+        raise Exception("No variables for tabulation. Please specify value for geog or tab_vars.")
+    if (len(record_key)==0):
+        raise Exception("Please specify a value for record_key.")
+    if (len(geog)>0):
+        if not(all([item in data.columns for item in geog])):
+            raise Exception("Specified value(s) for geog must be column(s) in data.")
+    if (len(tab_vars)>0):
+        if not(all([item in data.columns for item in tab_vars])):
+            raise Exception("Specified value(s) for tab_vars must be column(s) in data.")
+    if (len(record_key)>0):
+        if (not (record_key in data.columns)):
+            raise Exception("Specified value for record_key must be a column in data.")
+    if not(all([item in ptable.columns for item in ["pcv","ckey","pvalue"]])):
+        raise Exception("Supplied ptable must contain columns named 'pcv','ckey' and 'pvalue'.")
+    # =========================================================================
     
     count_df = data.groupby(geog+tab_vars).size().reset_index(name='rs_cv')
 
