@@ -69,6 +69,8 @@ def create_perturbed_table(data, geog, tab_vars, record_key, ptable):
                                         tab_vars = ["Sex","Industry","Occupation"],
                                         ptable = ptable_10_5)
 
+    >>> perturbed_table
+
     """
     # Input checks ============================================================
     # 1. Type validation on input data & ptable
