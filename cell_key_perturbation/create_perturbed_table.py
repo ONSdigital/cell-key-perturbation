@@ -10,7 +10,7 @@ Noise is added from the 'ptable' file, and counts<10 are changed to 0 (also done
 
 import pandas as pd
 
-def create_perturbed_table(data, geog, tab_vars, record_key, ptable):
+def create_perturbed_table(data, geog, tab_vars, record_key, ptable, threshold):
     """
     Function creates a frequency table which has has a cell key perturbation technique applied with help from a p-table. 
     
@@ -144,9 +144,9 @@ def create_perturbed_table(data, geog, tab_vars, record_key, ptable):
 
     aggregated_table["count"] = aggregated_table["rs_cv"] + aggregated_table["pvalue"]     
 
+    aggregated_table.loc[aggregated_table["count"] < threshold, "count"] = 0
+
     return aggregated_table
-
-
 
 if __name__ == "__main__":
     import doctest
