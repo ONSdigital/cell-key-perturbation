@@ -2,15 +2,16 @@
 """
 Created on Wed April 25 15:24:03 2023
 
-This function runs the SDC methods required for frequency tables in IDS - 'cell key perturbation' and a threshold of 10
+This function runs the SDC methods required for frequency tables in IDS - 'cell key perturbation'. 
 A frequency table is created from the underlying microdata, cross-tabulating the given variables
-Noise is added from the 'ptable' file, and counts<10 are changed to 0 (also done through the ptable)
+Noise is added from the 'ptable' file, and counts below threshold (default=10) are changed to nan. 
 @author: iain dove
 """
 
 import pandas as pd
+import numpy as np
 
-def create_perturbed_table(data, geog, tab_vars, record_key, ptable, threshold):
+def create_perturbed_table(data, geog, tab_vars, record_key, ptable, threshold = 10):
     """
     Function creates a frequency table which has has a cell key perturbation technique applied with help from a p-table. 
     
@@ -39,10 +40,16 @@ def create_perturbed_table(data, geog, tab_vars, record_key, ptable, threshold):
     A pandas data frame containing the 'ptable' file. The ptable file determines when perturbation is applied. 
     'ptable_10_5_rule.csv' is supplied with this package, which applies a threshold of 10, and rounding to base 5.
     
+    threshold: Integer
+    Threshold below which cell counts are supressed. Counts below this value will be returned as nan. 
+    The default threshold is 10. Setting threshold=0 would mean no counts are supressed.
+    
     Returns
     -------
     aggregated_table: Pandas data frame
-    A frequency table which has had cell key perturbation applied. The application of perturbation will depend on the ptable supplied.
+    A frequency table which has had cell key perturbation and a threshold applied.
+    The threshold is specified using the threshold parameter which has a defualt of 10. 
+    The application of perturbation will depend on the ptable supplied.
     'ptable_10_5_rule.csv' applies a threshold of 10, and rounding to base 5.
 
     Examples
@@ -78,6 +85,7 @@ def create_perturbed_table(data, geog, tab_vars, record_key, ptable, threshold):
     # 3. Check variable is specified for record_key
     # 4. Check geog, tab_vars & record_key specified are columns in data
     # 5. Check ptable contains required columns
+    # 6. Check threshold is an integer    
     # ------------------------------------------------------------------------
     if not (isinstance(data, pd.DataFrame)):
         raise TypeError("Specified value for data must be a Pandas Dataframe.")
@@ -98,7 +106,26 @@ def create_perturbed_table(data, geog, tab_vars, record_key, ptable, threshold):
             raise Exception("Specified value for record_key must be a column in data.")
     if not(all([item in ptable.columns for item in ["pcv","ckey","pvalue"]])):
         raise Exception("Supplied ptable must contain columns named 'pcv','ckey' and 'pvalue'.")
+    if (type(threshold) != int):
+        raise Exception("Specified value for threshold must be an integer.")
     # =========================================================================
+    
+    # Check data has sufficient % records with record keys to apply perturbation
+    rkey_nan_count = data[record_key].isna().sum()  
+    rkey_percent = 100 * (1 - rkey_nan_count/len(data))
+    
+    if (rkey_percent < 50):
+        raise Exception("Less than 50% of records have a record key. This is not enough to apply perturbation.")        
+    elif (rkey_percent < 100):
+        warning_string = "Warning: " 
+        if (rkey_percent < 99.94):
+            warning_string = warning_string + "Only " + str(round(rkey_percent,1)) + "% of records have a record key. "
+        if (rkey_nan_count == 1):
+            warning_string = warning_string + "1 record has a missing record key."
+        else:    
+            warning_string = warning_string + str(rkey_nan_count) + " records have missing record keys." 
+        print(warning_string)        
+     # =========================================================================   
     
     count_df = data.groupby(geog+tab_vars).size().reset_index(name='rs_cv')
 
@@ -144,7 +171,7 @@ def create_perturbed_table(data, geog, tab_vars, record_key, ptable, threshold):
 
     aggregated_table["count"] = aggregated_table["rs_cv"] + aggregated_table["pvalue"]     
 
-    aggregated_table.loc[aggregated_table["count"] < threshold, "count"] = 0
+    aggregated_table.loc[aggregated_table["count"] < threshold, "count"] = np.nan
 
     return aggregated_table
 
