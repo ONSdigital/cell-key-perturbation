@@ -178,11 +178,11 @@ create_perturbed_table(data, geog, tab_vars, record_key, ptable)
 
 - data - a data.table containing the data to be tabulated and perturbed.
 - geog - a string vector giving the column name in 'data' that contains the 
-desired geography level you wish to tabulate at, e.g. c("Local_Authority", 
-"Ward"). This can be the empty vector, c(), if no geography level is required.
+desired geography level you wish to tabulate at, e.g. ["Local_Authority", 
+"Ward"]. This can be the empty vector, geog=[], if no geography level is required.
 - tab_vars - a string vector giving the column names in 'data' of the variables 
-to be tabulated e.g. c("Age","Health","Occupation"). This can also be the empty 
-vector, c(). However, at least one of 'tab_vars' or 'geog' must be populated - 
+to be tabulated e.g. ["Age","Health","Occupation"]. This can also be the empty 
+vector, tab_vars=[]. However, at least one of 'tab_vars' or 'geog' must be populated - 
 if both are left blank an error message will be returned.
 - record_key - a string containing the column name in 'data' giving the 
 record keys required for perturbation. 
