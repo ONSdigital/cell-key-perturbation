@@ -253,14 +253,20 @@ contingency table is published.
 
 ### Example (Synthetic) Data
 
-The following are included in the method package and can also be found in the GitHub repo for this method (https://github.com/ONSdigital/cell-key-perturbation): 
+The following are included in the method package and will be located in your installation directory.
+They can also be found in the GitHub repo for this method (https://github.com/ONSdigital/cell-key-perturbation): 
 
 - generate_test_data.py script to create an example data set called micro,
   a randomly generated data set with record keys in the range 0-255
 
 - ptable_10_5_rule.csv file containing the example ptable, ptable_10_5, which 
-  applies the 10_5 rule with record keys in the range 0-255
-
+  applies the 10_5 rule with record keys in the range 0-255.
+  This file will be located in your installation directory and should be read
+  in as a pandas dataframe specifying the filepath as your installation directory:
+```
+#import pandas as pd
+ptable_10_5 = pd.read_csv("<filepath>\ptable_10_5_rule.csv")
+```
 
 ## Worked Example
 
