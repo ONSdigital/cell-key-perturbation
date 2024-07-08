@@ -116,6 +116,9 @@ always perturbed in the same way.
 
 This method requires Python 3.7 and uses the pandas package.
 
+>📝 <sub>To prevent downgrading software on your system, we recommend creating a virtual environment to install and run SML methods. This will enable you to install the method with the required version of Python, etc, without disrupting the newer versions you may be running on your system. </sub>
+
+
 The method package can be installed from PyPI using the following code in 
 the terminal or command prompt:
 
@@ -256,13 +259,13 @@ contingency table is published.
 The following are included in the method package and will be located in your installation directory.
 They can also be found in the GitHub repo for this method (https://github.com/ONSdigital/cell-key-perturbation): 
 
-- generate_test_data.py script to create an example data set called micro,
+- **generate_test_data.py** : script to create an example data set called micro,
   a randomly generated data set with record keys in the range 0-255
 
-- ptable_10_5_rule.csv file containing the example ptable, ptable_10_5, which 
-  applies the 10_5 rule with record keys in the range 0-255.
-  This file will be located in your installation directory and should be read
-  in as a pandas dataframe specifying the filepath to your installation directory:
+- **ptable_10_5_rule.csv** : file containing example ptable, ptable_10_5, which 
+  applies the 10_5 rule and has record keys in the range 0-255.
+  This file should be read in as a pandas dataframe specifying the filepath to 
+  the location for your installation:
 ```
 #import pandas as pd
 ptable_10_5 = pd.read_csv("ptable_10_5_rule.csv")
