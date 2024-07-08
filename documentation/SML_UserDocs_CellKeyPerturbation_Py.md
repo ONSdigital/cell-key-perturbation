@@ -262,10 +262,10 @@ They can also be found in the GitHub repo for this method (https://github.com/ON
 - ptable_10_5_rule.csv file containing the example ptable, ptable_10_5, which 
   applies the 10_5 rule with record keys in the range 0-255.
   This file will be located in your installation directory and should be read
-  in as a pandas dataframe specifying the filepath as your installation directory:
+  in as a pandas dataframe specifying the filepath to your installation directory:
 ```
 #import pandas as pd
-ptable_10_5 = pd.read_csv("<filepath>\ptable_10_5_rule.csv")
+ptable_10_5 = pd.read_csv("ptable_10_5_rule.csv")
 ```
 
 ## Worked Example
