@@ -57,7 +57,7 @@ uniformly distributed integers within the chosen range. Previously, record keys 
 record keys in the range 0-4096 for the purpose of processing administrative data. 
 
 It is expected that users will tabulate 1-4 variables for a particular geography 
-level e.g. tabulate age by gender at local authority level. 
+level e.g. tabulate age by sex at local authority level. 
 
 The create_perturbed_table function counts how many rows in the data
 contain each combination of categories e.g. how many respondents are of
@@ -97,11 +97,13 @@ The microdata must contain one column per variable, which are expected to be
 categorical (they can be numeric but categorical is more suitable for 
 frequency tables). 
 
-Ideally, the ptable used and the record keys attached to the microdata should 
-use the same record key range, 0-255 or 0-4095.
+Record keys should already be attached to the data, and the range of record 
+keys in the ptable should match that in the data, 0-255 or 0-4095.
 
 Cell Key Perturbation is consistent and repeatable, so the same cells are 
-always perturbed in the same way.
+always perturbed in the same way. The record keys need to be unchanged, 
+changing the record keys would create inconsistent results and provide 
+much less protection. 
 
 ### Worked Example (optional)
 
@@ -154,20 +156,22 @@ A ptable file needs to be supplied which determines which cells are perturbed
 and by how much (most cells are perturbed by +0). 
 
 The ptable used and the record keys attached to the microdata should ideally use  
-the same record key range, 0-255 or 0-4095. The method will still work if they
-do not match but a warning message will be generated.
+the same record key range, 0-255 or 0-4095. A warning message will be generated 
+if the record key ranges do not match.
 
 By default a ptable that applies the '10-5 rule' is provided with the method 
 package and works with record keys in the range 0-255. This ptable will 
 remove all cells \<10, and round all others to the nearest 5. This provides 
-more protection than necessary but will ensure safe outputs. 
+more protection than necessary but will ensure safe outputs. If this ptable 
+is used with admin data, meaning the record key ranges do not match, it 
+is acceptable to disregard the warning in this circumstance.
 
 Other ptables may be available depending on the data used, for example 
 census 2021 data will require the ptable_census21 to be used and is based 
 on cell keys in the range 0-255.
 
 Cell Key Perturbation is consistent and repeatable, so the same cells are 
-always perturbed in the same way.
+always perturbed in the same way provided the record keys are not changed.
 
 
 ## How to Use the Method
@@ -179,7 +183,7 @@ cell key perturbation applied has the following arguments:
 
 create_perturbed_table(data, geog, tab_vars, record_key, ptable)
 
-- data - a data.table containing the data to be tabulated and perturbed.
+- data - a pandas dataframe containing the data to be tabulated and perturbed.
 - geog - a string vector giving the column name in 'data' that contains the 
 desired geography level you wish to tabulate at, e.g. ["Local_Authority", 
 "Ward"]. This can be the empty vector, geog=[], if no geography level is required.
@@ -189,7 +193,7 @@ vector, tab_vars=[]. However, at least one of 'tab_vars' or 'geog' must be popul
 if both are left blank an error message will be returned.
 - record_key - a string containing the column name in 'data' giving the 
 record keys required for perturbation. 
-- ptable - a data.table containing the 'ptable' file which determines when 
+- ptable - a pandas dataframe containing the 'ptable' file which determines when 
 perturbation is applied.
 
 Example rows of a microdata table are shown below:
@@ -250,7 +254,7 @@ it will be 0. This is obtained from the ptable using a join on ckey and pcv.
 The columns you are most likely interested in are the variables, which 
 are the categories you've summarised by, plus the 'count' column.
 
-The ckey, pcv, pre_sdc_count and pvalue columns should be dropped before the 
+The ckey, pcv, rs_cv and pvalue columns should be dropped before the 
 contingency table is published.
 
 
@@ -296,7 +300,7 @@ perturbed_table = create_perturbed_table(data = micro,
 ```
 
 4.  To use the method with your own microdata and ptable, ensure that these are 
-each ready to pass to the method in the form of a pandas dataframe abd that your 
+each ready to pass to the method in the form of a pandas dataframe and that your 
 dataset includes a column for record key. 
 
 5.  Define the arguments of the create_perturbed_table function (data, 
@@ -343,9 +347,9 @@ contingency table is published.
 
 The ONS Statistical Methods Library at https://statisticalmethodslibrary.ons.gov.uk/ 
 contains:
-.	Further information about the methods including a link to the GitHub 
+-	Further information about the methods including a link to the GitHub 
 repository which contains detailed API information as part of the method code.
-.	Information about other methods available through the library.
+-	Information about other methods available through the library.
 
 
 ### License
