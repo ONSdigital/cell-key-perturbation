@@ -10,9 +10,9 @@
  | Support Area     | Statistical Disclosure Control  | 
  | Method Theme     | Statistical Disclosure Control  |
  | Status           | Ready to Use  |
- | Inputs           | data, record_key, geog, tab_vars, ptable |
+ | Inputs           | data, record_key, geog, tab_vars, ptable, threshold |
  | Outputs          | frequency table with cell key perturbation applied |
- | Method Version   | 1.1.1                              |
+ | Method Version   | 2.0.0                              |
 
 ### Summary
 
@@ -47,14 +47,15 @@ determines which cells get perturbed and by how much.
 
 ### Statistical Process Flow / Formal Definition
 
-The user is required to supply microdata and to specify which columns in the data they 
-want to tabulate by. They must also supply a ptable which will determine which cells 
-get perturbed and by how much.
+The user is required to supply microdata and to specify which columns in the
+data they want to tabulate by. They must also supply a ptable which will 
+determine which cells get perturbed and by how much.
 
-The microdata needs to contain a column for 'record key'. Record keys are random, 
-uniformly distributed integers within the chosen range. Previously, record keys between 
-0-255 have been used (as for census-2021). The method has been extended to also handle 
-record keys in the range 0-4096 for the purpose of processing administrative data. 
+The microdata needs to contain a column for 'record key'. Record keys are 
+random, uniformly distributed integers within the chosen range. Previously, 
+record keys between 0-255 have been used (as for census-2021). The method has 
+been extended to also handle record keys in the range 0-4096 for the purpose of 
+processing administrative data. 
 
 It is expected that users will tabulate 1-4 variables for a particular geography 
 level e.g. tabulate age by sex at local authority level. 
@@ -85,11 +86,17 @@ cell values above 750, the values are transformed by -1, modulo 250,
 +501. This achieves the looping effect so that cell values 751, 1001,
 1251 and so on will have a pcv of 501.
 
+After cell key perturbation is applied, a threshold is applied so that any 
+counts below the threshold will be suppressed (set to missing). The user can 
+specify the value for the threshold, but if they do not, the default value of 
+10 will be applied. Setting the threshold to zero would mean no suppression is 
+applied.
+
 As well as specifying the level of perturbation, the ptable can also be used 
 to apply rounding, and a threshold for small counts. The example ptable 
 supplied with this method, ptable_10_5, applies the 10_5 rule (supressing 
-values less then 10 and rounding others to the nearest 5) for record keys 
-in range 0-255.
+values less than 10 and rounding others to the nearest 5) for record keys 
+in the range 0-255.
 
 ### Assumptions & Vailidity
 
@@ -105,30 +112,24 @@ always perturbed in the same way. The record keys need to be unchanged,
 changing the record keys would create inconsistent results and provide 
 much less protection. 
 
-### Worked Example (optional)
-
-### Issues for Consideration (optional)
-
-### References (optional)
-
 
 # User Notes
 
 ### Finding and Installing the method
 
-This method requires Python 3.7 and uses the pandas package.
+This method requires Python 3.7 or above and uses the pandas package.
 
 >📝 <sub>To prevent downgrading software on your system, we recommend creating a virtual environment to install and run SML methods. This will enable you to install the method with the required version of Python, etc, without disrupting the newer versions you may be running on your system. </sub>
 
 
-The method package can be installed from PyPI using the following code in 
-the terminal or command prompt:
+The method package can be installed from PyPI/Artifactory using the following 
+code in the terminal or command prompt:
 
 ```
 pip install cell_key_perturbation
 ```
 
-In your code you can load the cell key perturbation package using:
+In your code you can import the cell key perturbation package using:
 
 ```
 from cell_key_perturbation import create_perturbed_table
@@ -140,6 +141,8 @@ from cell_key_perturbation import create_perturbed_table
 - The microdata and the ptable each need to be supplied as a pandas dataframe.
 - The microdata must include a record key variable for cell key perturbation 
 to be applied.
+- There must be a sufficient number of records with record keys. If less than 
+50% of records have a record key, perturbation cannot be applied.
 - There are no methods dependent on cell key perturbation.
 
 
@@ -150,7 +153,7 @@ categorical (they can be numeric but categorical is more suitable for
 frequency tables). 
 
 The 'record key' column in the microdata will be an interger, randomly 
-uniformly distributed either in the range 0-255 or 0-4095.
+uniformly distributed either in the range 0-255 or 0-4095. 
 
 A ptable file needs to be supplied which determines which cells are perturbed 
 and by how much (most cells are perturbed by +0). 
@@ -181,20 +184,22 @@ always perturbed in the same way provided the record keys are not changed.
 The 'create_perturbed_table()' function which creates the frequency table with 
 cell key perturbation applied has the following arguments:
 
-create_perturbed_table(data, geog, tab_vars, record_key, ptable)
+create_perturbed_table(data, geog, tab_vars, record_key, ptable, threshold)
 
 - data - a pandas dataframe containing the data to be tabulated and perturbed.
 - geog - a string vector giving the column name in 'data' that contains the 
 desired geography level you wish to tabulate at, e.g. ["Local_Authority", 
-"Ward"]. This can be the empty vector, geog=[], if no geography level is required.
+"Ward"]. This can be the empty vector, geog=[], if no geography level is 
+required.
 - tab_vars - a string vector giving the column names in 'data' of the variables 
 to be tabulated e.g. ["Age","Health","Occupation"]. This can also be the empty 
-vector, tab_vars=[]. However, at least one of 'tab_vars' or 'geog' must be populated - 
-if both are left blank an error message will be returned.
+vector, tab_vars=[]. However, at least one of 'tab_vars' or 'geog' must be 
+populated. if both are left blank an error message will be returned.
 - record_key - a string containing the column name in 'data' giving the 
 record keys required for perturbation. 
 - ptable - a pandas dataframe containing the 'ptable' file which determines when 
 perturbation is applied.
+- threshold - the value below which a count is suppressed (default 10).
 
 Example rows of a microdata table are shown below:
 
@@ -225,20 +230,20 @@ Example rows of a ptable are shown below:
 
 ### Method Output 
 
-The output from the code is a pandas dataframe containing a frequency table with the
-counts having been affected by perturbation, as specified in the ptable. 
+The output from the code is a pandas dataframe containing a frequency table with 
+the counts having been affected by perturbation, as specified in the ptable. 
 
 The table will be in the following format:
 
 
-  | var1  | var5  | var8  |  rs_cv | ckey  | pcv   | pvalue | count  |
-  |  :--- | :---- | :---- | :----  | :---- | :---- | :----  | :----  | 
-  |  1    |   1   |   A   |   16   |  64   |  16   |   -1   |   15   | 
-  |  1    |   1   |   B   |    5   | 196   |   5   |   -5   |    0   | 
-  |  1    |   1   |   C   |   10   | 123   |  10   |    0   |   10   | 
-  |  1    |   1   |   D   |   10   |   3   |  10   |    0   |   10   | 
-  |  1    |   2   |   A   |   12   | 149   |  12   |   -2   |   10   | 
-  | ...   | ...   | ...   |  ...   | ...   | ...   |  ...   |        | 
+  | var1  | var5  | var8  | pre_sdc_count | ckey  | pcv   | pvalue | count  |
+  |  :--- | :---- | :---- |       :----   | :---- | :---- | :----  | :----  | 
+  |  1    |   1   |   A   |         16    |  64   |  16   |   -1   |   15   | 
+  |  1    |   1   |   B   |          5    | 196   |   5   |   -5   |    0   | 
+  |  1    |   1   |   C   |         10    | 123   |  10   |    0   |   10   | 
+  |  1    |   1   |   D   |         10    |   3   |  10   |    0   |   10   | 
+  |  1    |   2   |   A   |         12    | 149   |  12   |   -2   |   10   | 
+  | ...   | ...   | ...   |        ...    | ...   | ...   |  ...   |  ...   | 
   
 
 The table contains the variables used as the categories used to summarise the 
@@ -246,7 +251,7 @@ data (in this example var1, var5 & var8), and five other columns:
 
 - 'ckey' is the sum of record keys for each combination of variables
 - 'pcv' is the perturbation cell value, the pre-perturbation count modulo 750
-- 'rs_cv' is the pre-perturbation count 
+- 'pre_sdc_count' is the pre-perturbation count 
 - 'pvalue' is the perturbation applied to the original count, most commonly 
 it will be 0. This is obtained from the ptable using a join on ckey and pcv.
 - 'count' is the post-perturbation count, the values to be output
@@ -254,22 +259,29 @@ it will be 0. This is obtained from the ptable using a join on ckey and pcv.
 The columns you are most likely interested in are the variables, which 
 are the categories you've summarised by, plus the 'count' column.
 
-The ckey, pcv, rs_cv and pvalue columns should be dropped before the 
+The ckey, pcv, pre_sdc_count and pvalue columns should be dropped before the 
 contingency table is published.
 
 
 ### Example (Synthetic) Data
 
-The following are included in the method package and will be located in your installation directory.
-They can also be found in the GitHub repo for this method (https://github.com/ONSdigital/cell-key-perturbation): 
+The following are included in the method package: 
 
-- **generate_test_data.py** : script to create an example data set called micro,
+- **generate_test_data** : function to create an example data set,
   a randomly generated data set with record keys in the range 0-255
+
+```
+from cell_key_perturbation import generate_test_data
+micro = generate_test_data()
+```
 
 - **ptable_10_5_rule.csv** : file containing example ptable, ptable_10_5, which 
   applies the 10_5 rule and has record keys in the range 0-255.
-  This file should be read in as a pandas dataframe specifying the filepath to 
-  the location for your installation:
+  
+  This will be located in your installation directory and should be read in as 
+  a pandas dataframe specifying the filepath to the location for your 
+  installation:
+  
 ```
 #import pandas as pd
 ptable_10_5 = pd.read_csv("ptable_10_5_rule.csv")
@@ -296,7 +308,8 @@ perturbed_table = create_perturbed_table(data = micro,
                                          record_key = "record_key",
                                          geog = ["var1"],
                                          tab_vars = ["var5","var8"],
-                                         ptable = ptable_10_5)
+                                         ptable = ptable_10_5,
+                                         threshold=10)
 ```
 
 4.  To use the method with your own microdata and ptable, ensure that these are 
@@ -323,24 +336,16 @@ The resulting frequency table and counts can be saved to a csv file.
 For example:
 
 ```
-output_table = perturbed_table.drop(columns = [‘rs_cv’, ‘ckey’, ‘pcv’, ‘pvalue’])
+output_table = perturbed_table.drop(columns = [‘pre_sdc_count’, ‘ckey’, ‘pcv’, ‘pvalue’])
 output_table.to_csv(“yourfilename.csv”, index = False)
 ```
 
-### Treatment of Special Cases
-
-
-### Other Outputs and Metadata (optional)
+### Other Outputs and Metadata
 
 In addition to the category variables and the post-perturbation count, the 
 output data set contains 5 additional columns which were used for processing. 
-The ckey, pcv, rs_cv and pvalue columns should be dropped before the 
+The ckey, pcv, pre_sdc_count and pvalue columns should be dropped before the 
 contingency table is published.
-
-### Issues for Consideration (optional)
- 
- 
-### Appendix (optional)
 
 
 ### Additional Information
