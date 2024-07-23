@@ -2,7 +2,7 @@ name: Build and publish on PyPI
 
 on:
   release:
-    types: [published]
+    types: [released]
 
 jobs:
   build-pub:
