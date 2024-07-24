@@ -132,7 +132,7 @@ pip install cell_key_perturbation
 In your code you can import the cell key perturbation package using:
 
 ```
-from cell_key_perturbation import create_perturbed_table
+from cell_key_perturbation.create_perturbed_table import create_perturbed_table
 ```
 
 ### Requirements and Dependencies 
@@ -271,7 +271,7 @@ The following are included in the method package:
   a randomly generated data set with record keys in the range 0-255
 
 ```
-from cell_key_perturbation import generate_test_data
+from cell_key_perturbation.generate_test_data import generate_test_data
 micro = generate_test_data()
 ```
 
@@ -296,7 +296,7 @@ pip install cell_key_perturbation
 
 2.  Import the package.
 ```
-from cell_key_perturbation import create_perturbed_table
+from cell_key_perturbation.create_perturbed_table import create_perturbed_table
 ```
 
 3. You can test calling the method using the example data (micro) and 
