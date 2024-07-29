@@ -116,20 +116,25 @@ def create_perturbed_table(
     if not (isinstance(ptable, pd.DataFrame)):
         raise TypeError("Specified value for ptable must be a Pandas Dataframe.")
     if ((len(geog)==0) & (len(tab_vars)==0)):
-        raise Exception("No variables for tabulation. Please specify value for geog or tab_vars.")
+        raise Exception("No variables for tabulation. "\
+                        "Please specify value for geog or tab_vars.")
     if (len(record_key)==0):
         raise Exception("Please specify a value for record_key.")
     if (len(geog)>0):
         if not(all([item in data.columns for item in geog])):
-            raise Exception("Specified value(s) for geog must be column(s) in data.")
+            raise Exception("Specified value(s) for geog must be "\
+                            "column(s) in data.")
     if (len(tab_vars)>0):
         if not(all([item in data.columns for item in tab_vars])):
-            raise Exception("Specified value(s) for tab_vars must be column(s) in data.")
+            raise Exception("Specified value(s) for tab_vars must be "\
+                            "column(s) in data.")
     if (len(record_key)>0):
         if (not (record_key in data.columns)):
-            raise Exception("Specified value for record_key must be a column in data.")
+            raise Exception("Specified value for record_key must be a "\
+                            "column in data.")
     if not(all([item in ptable.columns for item in ["pcv","ckey","pvalue"]])):
-        raise Exception("Supplied ptable must contain columns named 'pcv','ckey' and 'pvalue'.")
+        raise Exception("Supplied ptable must contain columns named "\
+                        "'pcv','ckey' and 'pvalue'.")
     if (type(threshold) != int):
         raise Exception("Specified value for threshold must be an integer.")
     # =========================================================================
@@ -139,7 +144,10 @@ def create_perturbed_table(
     rkey_percent = 100 * (1 - rkey_nan_count/len(data))
     
     if (rkey_percent < 50):
-        raise Exception("Less than 50% of records have a record key. This is not enough to apply perturbation.")        
+        raise Exception("Less than 50% of records have a record key."\
+            "\nCell key perturbation will be much less effective with fewer "\
+            "record keys, so this code requires at least 50% of records to "\
+            "have a record key.")        
     elif (rkey_percent < 100):
         warning_string = "Warning: " 
         if (rkey_percent < 99.94):
