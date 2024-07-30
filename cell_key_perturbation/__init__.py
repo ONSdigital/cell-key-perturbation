@@ -1,3 +1,3 @@
 """This package creates frequency tables from microdata, and applies cell key perturbation to alter the final values""" 
 
-__version__ = "2.0.0-rc.1"
+__version__ = "2.0.0"
