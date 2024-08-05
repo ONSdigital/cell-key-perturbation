@@ -35,7 +35,7 @@ apply cell key perturbation with a threshold of 10 and rounding to base
 5.
 
 ```
-from cell_key_perturbation import create_perturbed_table
+from cell_key_perturbation.create_perturbed_table import create_perturbed_table
 
 perturbed_table = create_perturbed_table(data = micro,
                                          record_key = "record_key",
