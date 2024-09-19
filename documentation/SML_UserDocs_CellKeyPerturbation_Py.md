@@ -125,13 +125,13 @@ This method requires Python 3.7 or above and uses the pandas package.
 The method package can be installed from PyPI/Artifactory using the following 
 code in the terminal or command prompt:
 
-```
+```py
 pip install cell_key_perturbation
 ```
 
 In your code you can import the cell key perturbation package using:
 
-```
+```py
 from cell_key_perturbation.create_perturbed_table import create_perturbed_table
 ```
 
@@ -270,7 +270,7 @@ The following are included in the method package:
 - **generate_test_data** : function to create an example data set,
   a randomly generated data set with record keys in the range 0-255
 
-```
+```py
 from cell_key_perturbation.generate_test_data import generate_test_data
 micro = generate_test_data()
 ```
@@ -282,7 +282,7 @@ micro = generate_test_data()
   a pandas dataframe specifying the filepath to the location for your 
   installation:
   
-```
+```py
 #import pandas as pd
 ptable_10_5 = pd.read_csv("ptable_10_5_rule.csv")
 ```
@@ -290,12 +290,12 @@ ptable_10_5 = pd.read_csv("ptable_10_5_rule.csv")
 ## Worked Example
 
 1.  Install the cell key perturbation package.
-```
+```py
 pip install cell_key_perturbation
 ```
 
 2.  Import the package.
-```
+```py
 from cell_key_perturbation.create_perturbed_table import create_perturbed_table
 ```
 
@@ -303,7 +303,7 @@ from cell_key_perturbation.create_perturbed_table import create_perturbed_table
 ptable (ptable_10_5), specifying the record_key, geog and tab_vars as
 columns in micro. For example:
 
-```
+```py
 perturbed_table = create_perturbed_table(data = micro,
                                          record_key = "record_key",
                                          geog = ["var1"],
@@ -335,7 +335,7 @@ blank an error message will be returned and the method will not work.
 The resulting frequency table and counts can be saved to a csv file. 
 For example:
 
-```
+```py
 output_table = perturbed_table.drop(columns = [‘pre_sdc_count’, ‘ckey’, ‘pcv’, ‘pvalue’])
 output_table.to_csv(“yourfilename.csv”, index = False)
 ```
