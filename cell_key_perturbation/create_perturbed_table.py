@@ -166,7 +166,7 @@ def create_perturbed_table(
                        values='pre_sdc_count',                            
                        fill_value = 0,
                        dropna=False,
-                       aggfunc = sum).reset_index()
+                       aggfunc = "sum").reset_index()
     
     max_ckey = ptable["ckey"].max()
     max_rkey = data[record_key].max()
@@ -185,7 +185,7 @@ def create_perturbed_table(
 
     aggregated_table = aggregated_table.merge(ckeys_table,how ='left',on = geog + tab_vars)
 
-    aggregated_table["ckey"].fillna(0, inplace = True)
+    aggregated_table["ckey"] = aggregated_table["ckey"].fillna(0)
     aggregated_table["ckey"] = aggregated_table["ckey"].astype(int)
     
     # create pcv - change rows with large counts by -1, modulo 250, +501
@@ -201,7 +201,7 @@ def create_perturbed_table(
 
     aggregated_table = aggregated_table.merge(ptable, how ='left', on = ["pcv","ckey"])
 
-    aggregated_table["pvalue"].fillna(0, inplace = True)
+    aggregated_table["pvalue"] = aggregated_table["pvalue"].fillna(0)
     aggregated_table["pvalue"] = aggregated_table["pvalue"].astype(int)
 
     aggregated_table["count"] = aggregated_table["pre_sdc_count"] + aggregated_table["pvalue"]     
