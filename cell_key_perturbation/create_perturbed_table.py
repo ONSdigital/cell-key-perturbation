@@ -13,6 +13,8 @@ Noise is added from the 'ptable' file, and counts below threshold
 import pandas as pd
 import numpy as np
 
+from src.validate_inputs_before_perturbation import validate_inputs
+
 def create_perturbed_table(
     data, 
     geog, 
@@ -103,61 +105,7 @@ def create_perturbed_table(
     >>> perturbed_table
 
     """
-    # Input checks ============================================================
-    # 1. Type validation on input data & ptable
-    # 2. Check that at least one variable specified for geog or tab_vars
-    # 3. Check variable is specified for record_key
-    # 4. Check geog, tab_vars & record_key specified are columns in data
-    # 5. Check ptable contains required columns
-    # 6. Check threshold is an integer    
-    # ------------------------------------------------------------------------
-    if not (isinstance(data, pd.DataFrame)):
-        raise TypeError("Specified value for data must be a Pandas Dataframe.")
-    if not (isinstance(ptable, pd.DataFrame)):
-        raise TypeError("Specified value for ptable must be a Pandas Dataframe.")
-    if ((len(geog)==0) & (len(tab_vars)==0)):
-        raise Exception("No variables for tabulation. "\
-                        "Please specify value for geog or tab_vars.")
-    if (len(record_key)==0):
-        raise Exception("Please specify a value for record_key.")
-    if (len(geog)>0):
-        if not(all([item in data.columns for item in geog])):
-            raise Exception("Specified value(s) for geog must be "\
-                            "column(s) in data.")
-    if (len(tab_vars)>0):
-        if not(all([item in data.columns for item in tab_vars])):
-            raise Exception("Specified value(s) for tab_vars must be "\
-                            "column(s) in data.")
-    if (len(record_key)>0):
-        if (not (record_key in data.columns)):
-            raise Exception("Specified value for record_key must be a "\
-                            "column in data.")
-    if not(all([item in ptable.columns for item in ["pcv","ckey","pvalue"]])):
-        raise Exception("Supplied ptable must contain columns named "\
-                        "'pcv','ckey' and 'pvalue'.")
-    if (type(threshold) != int):
-        raise Exception("Specified value for threshold must be an integer.")
-    # =========================================================================
-    
-    # Check data has sufficient % records with record keys to apply perturbation
-    rkey_nan_count = data[record_key].isna().sum()  
-    rkey_percent = 100 * (1 - rkey_nan_count/len(data))
-    
-    if (rkey_percent < 50):
-        raise Exception("Less than 50% of records have a record key."\
-            "\nCell key perturbation will be much less effective with fewer "\
-            "record keys, so this code requires at least 50% of records to "\
-            "have a record key.")        
-    elif (rkey_percent < 100):
-        warning_string = "Warning: " 
-        if (rkey_percent < 99.94):
-            warning_string = warning_string + "Only " + str(round(rkey_percent,1)) + "% of records have a record key. "
-        if (rkey_nan_count == 1):
-            warning_string = warning_string + "1 record has a missing record key."
-        else:    
-            warning_string = warning_string + str(rkey_nan_count) + " records have missing record keys." 
-        print(warning_string)        
-     # ========================================================================   
+    validate_inputs(data, ptable, geog, tab_vars, record_key, threshold)
     
     count_df = data.groupby(geog+tab_vars).size().reset_index(name='pre_sdc_count')
 
@@ -168,20 +116,11 @@ def create_perturbed_table(
                        dropna=False,
                        aggfunc = "sum").reset_index()
     
-    max_ckey = ptable["ckey"].max()
-    max_rkey = data[record_key].max()
-    
-    if max_ckey!=max_rkey:
-        print('The ranges of record keys and cell keys appear to be ' 
-               'different. The maximum record key is ',max_rkey,', whereas '
-               'the maximum cell key is ',max_ckey,'. Please check you are ' 
-               'using the appropriate ptable for this data.')
-    
     ckeys_table = data.groupby(geog+tab_vars).agg(
          ckey = (record_key,'sum'),
          ).reset_index()   
     
-    ckeys_table["ckey"] = ckeys_table["ckey"]%(max_ckey+1)
+    ckeys_table["ckey"] = ckeys_table["ckey"]%(ptable["ckey"].max()+1)
 
     aggregated_table = aggregated_table.merge(ckeys_table,how ='left',on = geog + tab_vars)
 
