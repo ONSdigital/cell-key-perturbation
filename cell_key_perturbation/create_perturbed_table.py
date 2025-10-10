@@ -80,27 +80,28 @@ def create_perturbed_table(
 
     Examples
     --------
+    >>> from src.generate_test_data import generate_test_data
     >>> micro = generate_test_data()
-    >>> ptable_10_5 = pd.read_csv("ptable_10_5_rule.csv")
+    >>> ptable_10_5 = pd.read_csv("../data_files/ptable_10_5_rule.csv")
 
     >>> record_key = "record_key"
     >>> geog = ["var1"]
     >>> tab_vars = ["var5","var8"]
 
     >>> perturbed_table = create_perturbed_table(data = micro,
-                                        record_key = record_key,
-                                        geog = geog,
-                                        tab_vars = tab_vars,
-                                        ptable = ptable_10_5)
+    ...                                    record_key = record_key,
+    ...                                    geog = geog,
+    ...                                    tab_vars = tab_vars,
+    ...                                    ptable = ptable_10_5)
 
     >>> perturbed_table
 
     #using direct inputs, and selecting no geography breakdown
     >>> perturbed_table = create_perturbed_table(data = micro,
-                                         record_key = "record_key",
-                                         geog = [],
-                                         tab_vars = ["var1","var5","var8"],
-                                         ptable = ptable_10_5)
+    ...                                     record_key = "record_key",
+    ...                                     geog = [],
+    ...                                     tab_vars = ["var1","var5","var8"],
+    ...                                     ptable = ptable_10_5)
 
     >>> perturbed_table
 
