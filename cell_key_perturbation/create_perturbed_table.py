@@ -81,7 +81,12 @@ def create_perturbed_table(
     Examples
     --------
     >>> from utils.generate_test_data import generate_test_data
+    >>> from utils.generate_test_ptable import generate_ptable_10_5_rule
+    
     >>> micro = generate_test_data()
+    >>> ptable_10_5 = generate_ptable_10_5_rule()
+    
+    # or
     >>> ptable_10_5 = pd.read_csv("../data_files/ptable_10_5_rule.csv")
 
     >>> record_key = "record_key"
