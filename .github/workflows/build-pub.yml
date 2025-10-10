@@ -7,7 +7,7 @@ on:
 jobs:
   build-pub:
     name: Build and publish on PyPI
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write    
@@ -16,7 +16,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.6.15"
+          python-version: "3.10.18"
       - name: Install flit
         run: >-
           python3 -m
