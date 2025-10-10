@@ -13,7 +13,7 @@ Noise is added from the 'ptable' file, and counts below threshold
 import pandas as pd
 import numpy as np
 
-from src.validate_inputs_before_perturbation import validate_inputs
+from utils.validate_inputs_before_perturbation import validate_inputs
 
 def create_perturbed_table(
     data, 
@@ -80,7 +80,7 @@ def create_perturbed_table(
 
     Examples
     --------
-    >>> from src.generate_test_data import generate_test_data
+    >>> from utils.generate_test_data import generate_test_data
     >>> micro = generate_test_data()
     >>> ptable_10_5 = pd.read_csv("../data_files/ptable_10_5_rule.csv")
 
