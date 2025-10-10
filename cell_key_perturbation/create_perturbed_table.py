@@ -105,8 +105,10 @@ def create_perturbed_table(
     >>> perturbed_table
 
     """
+    #%%# Step 0: Validate Inputs
     validate_inputs(data, ptable, geog, tab_vars, record_key, threshold)
     
+    #%%# Step 1: Create frequency table
     count_df = data.groupby(geog+tab_vars).size().reset_index(name='pre_sdc_count')
 
     aggregated_table = pd.pivot_table(count_df,
@@ -116,6 +118,7 @@ def create_perturbed_table(
                        dropna=False,
                        aggfunc = "sum").reset_index()
     
+    #%%# Step 2: Calculate sum of the record keys and apply modulo to obtain cell keys
     ckeys_table = data.groupby(geog+tab_vars).agg(
          ckey = (record_key,'sum'),
          ).reset_index()   
@@ -127,24 +130,18 @@ def create_perturbed_table(
     aggregated_table["ckey"] = aggregated_table["ckey"].fillna(0)
     aggregated_table["ckey"] = aggregated_table["ckey"].astype(int)
     
-    # create pcv - change rows with large counts by -1, modulo 250, +501
-    # this section ensures that rows of the ptable 501-750 are reused 
-    # for cell values 751-1000, 1001-1250 etc to save ptable file size
-    # first create a copy of pre_sdc_count - 'record_swapping cell value'
+    #%%# Step 3: Create pcv by ensuring the rows of ptable 501-750 are reused for cell values above 750
     aggregated_table["pcv"] = aggregated_table["pre_sdc_count"]
-    # to save conditional statements modify all values first, then reset values<=750
     aggregated_table["pcv"] = ((aggregated_table["pcv"]-1)%250)+501
-    #revert all cells where pre_sdc_count<=750, which use the standard/expected row in the ptable
     aggregated_table.loc[ aggregated_table["pre_sdc_count"] <=750, "pcv"] = aggregated_table["pre_sdc_count"] 
 
-
+    #%%# Step 4: Merge aggregated table and ptable (left join) to get perturbation value for each cell
     aggregated_table = aggregated_table.merge(ptable, how ='left', on = ["pcv","ckey"])
-
     aggregated_table["pvalue"] = aggregated_table["pvalue"].fillna(0)
     aggregated_table["pvalue"] = aggregated_table["pvalue"].astype(int)
 
+    #%%# Step 5: Apply the perturbation and suppress counts less than the threshold
     aggregated_table["count"] = aggregated_table["pre_sdc_count"] + aggregated_table["pvalue"]     
-
     aggregated_table.loc[aggregated_table["count"] < threshold, "count"] = np.nan
 
     return aggregated_table
