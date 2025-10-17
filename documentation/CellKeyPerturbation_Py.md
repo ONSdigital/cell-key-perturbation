@@ -173,7 +173,7 @@ data (in this example `var1`, `var5` & `var8`), and five other columns:
 - `pcv` is the perturbation cell value, the pre-perturbation count modulo 750
 - `pre_sdc_count` is the pre-perturbation count 
 - `pvalue` is the perturbation applied to the original count, most commonly 
-it will be 0. This is obtained from the ptable using a join on ckey and pcv.
+it will be 0. This is obtained from the ptable using a join on `ckey` and `pcv`.
 - `count` is the post-perturbation count, the values to be output
 
 The columns you are most likely interested in are the variables, which 
@@ -277,35 +277,35 @@ contingency table is published.
 
 ## Statistical Process Flow / Formal Definition
 
-The user is required to supply microdata and to specify which columns in the
-data they want to tabulate by. They must also supply a ptable which will 
+The user is required to supply **microdata** and to specify which columns in the
+data they want to tabulate by. They must also supply a **ptable** which will 
 determine which cells get perturbed and by how much.
 
-The microdata needs to contain a column for `record key`. Record keys are 
+The **microdata** needs to contain a column for **record key**. **Record keys** are 
 random, uniformly distributed integers within the chosen range. Previously, 
-record keys between 0-255 have been used (as for census-2021). The method has 
-been extended to also handle record keys in the range 0-4096 for the purpose of 
+**record keys** between 0-255 have been used (as for census-2021). The method has 
+been extended to also handle **record keys** in the range 0-4096 for the purpose of 
 processing administrative data. 
 
 It is expected that users will tabulate 1-4 variables for a particular geography 
 level e.g. tabulate age by sex at local authority level. 
 
-The create_perturbed_table function counts how many rows in the data
+The `create_perturbed_table()` function counts how many rows in the data
 contain each combination of categories e.g. how many respondents are of
-each age category in each local authority area. The sum of the record
-keys for each record in each cell is also calculated. Modulo 256 or 4096
-of the sum is taken so this `cell key` is within range. The table now has 
-perturbation cell values (`pcv`) and cell keys (`ckey`).
+each age category in each local authority area. The sum of the **record
+keys** for each record in each cell is also calculated. Modulo 256 or 4096
+of the sum is taken so this **cell key** is within range. The table now has 
+**perturbation cell values** (`pcv`) and **cell keys** (`ckey`).
 
-The ptable is merged with the data, matching on `pcv` and `ckey`. The merge 
-provides a `pvalue` for each cell. The post perturbation count (`count` column) 
-is the pre-perturbation count (`pre_sdc_count`), plus the perturbation value
+The **ptable** is merged with the data, matching on `pcv` and `ckey`. The merge 
+provides a `pvalue` for each cell. The **post perturbation count** (`count`) 
+is the **pre-perturbation count** (`pre_sdc_count`), plus the **perturbation value**
 (`pvalue`). After this step, the counts have had the required perturbation 
-applied. The output is the frequency table with the post-perturbation `count` 
+applied. The output is the frequency table with the **post-perturbation count** (`count`) 
 column. The result is that counts have been deliberately changed based on the 
-ptable, for the purpose of disclosure protection.
+**ptable**, for the purpose of disclosure protection.
 
-To limit the size of the ptable, only 750 rows are used, and rows
+To limit the size of the **ptable**, only 750 rows are used, and rows
 501-750 are used repeatedly for larger cell values. E.g. instead of
 containing 100,001 rows, when the cell value is 100,001 the 501st row
 is used. Rows 501-750 will be used for cell values of 501-750, as well
@@ -316,30 +316,30 @@ cell values above 750, the values are transformed by -1, modulo 250,
 +501. This achieves the looping effect so that cell values 751, 1001,
 1251 and so on will have a `pcv` of 501.
 
-After cell key perturbation is applied, a threshold is applied so that any 
-counts below the threshold will be suppressed (set to missing). The user can 
-specify the value for the threshold, but if they do not, the default value of 
-10 will be applied. Setting the threshold to zero would mean no suppression is 
+After cell key perturbation is applied, a **threshold** is applied so that any 
+counts below the **threshold** will be suppressed (set to missing). The user can 
+specify the value for the **threshold**, but if they do not, the default value of 
+10 will be applied. Setting the **threshold** to zero would mean no suppression is 
 applied.
 
-As well as specifying the level of perturbation, the ptable can also be used 
-to apply rounding, and a threshold for small counts. The example ptable 
-supplied with this method, ptable_10_5, applies the 10_5 rule (supressing 
-values less than 10 and rounding others to the nearest 5) for record keys 
+As well as specifying the level of perturbation, the **ptable** can also be used 
+to apply rounding, and a ***threshold** for small counts. The example **ptable** 
+supplied with this method, `ptable_10_5`, applies the 10_5 rule (supressing 
+values less than 10 and rounding others to the nearest 5) for **record keys** 
 in the range 0-255.
 
 ## Assumptions & Vailidity
 
-The microdata must contain one column per variable, which are expected to be 
+The **microdata** must contain one column per variable, which are expected to be 
 categorical (they can be numeric but categorical is more suitable for 
 frequency tables). 
 
-Record keys should already be attached to the data, and the range of record 
-keys in the ptable should match that in the data, 0-255 or 0-4095.
+**Record keys** should already be attached to the data, and the range of record 
+keys in the **ptable** should match that in the data, 0-255 or 0-4095.
 
 Cell Key Perturbation is consistent and repeatable, so the same cells are 
-always perturbed in the same way. The record keys need to be unchanged, 
-changing the record keys would create inconsistent results and provide 
+always perturbed in the same way. The **record keys** need to be unchanged, 
+changing the **record keys** would create inconsistent results and provide 
 much less protection. 
 
 # Additional Information
