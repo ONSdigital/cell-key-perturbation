@@ -30,6 +30,8 @@ a real person, or is caused by the perturbation.
 Cell Key Perturbation is consistent and repeatable, so the same cells are 
 always perturbed in the same way.
 
+It is expected that users will tabulate 1 to 4 variables for a particular geography level - for example, tabulate age by sex at local authority level. 
+
 # User Notes
 
 ## Finding and Installing the method
@@ -52,6 +54,16 @@ In your code you can import the cell key perturbation package using:
 from cell_key_perturbation.create_perturbed_table import create_perturbed_table
 ```
 
+## Terminology
+
+- ***Microdata*** - data at the level of individual respondents
+- ***Record key*** - A random number assigned to each record 
+- ***Cell value*** - The number of records or frequency for a cell
+- ***Cell key*** - The sum of record keys for a given cell
+- ***pvalue*** - perturbation value. The value of noise added to cells, e.g. +1, -1
+- ***pcv*** - perturbation cell value. This is an amended cell value needed to merge on the ptable
+- ***ptable*** - perturbation table. The look-up file containing the pvalues, this determines which cells get perturbed and by how much.
+
 ## Requirements and Dependencies 
 
 - This method requires microdata and a perturbation table (ptable) file. 
@@ -62,37 +74,23 @@ to be applied.
 50% of records have a record key, perturbation cannot be applied.
 - There are no methods dependent on cell key perturbation.
 
+### Microdata
 
-## Assumptions and Validity 
+The **microdata** must contain one column per variable, which are expected to be categorical (they can be numeric but categorical is more suitable for frequency tables). 
 
-The microdata must contain one column per variable, which are expected to be 
-categorical (they can be numeric but categorical is more suitable for 
-frequency tables). 
+**Record keys** should already be attached to the **microdata** as a column of integers in the range 0-255 or 0-4095. The name of the **record key** column could change in different **microdata** tables. For example, **record key** columns in census data tables are named as `resident_record_key`, `household_record_key`, or `family_record_key` depending on the table type.
 
-Record keys should already be attached to the data. The `record_key` column 
-in the microdata will be an interger, randomly 
-uniformly distributed either in the range 0-255 or 0-4095. 
+The range of **record keys** should match the range of **cell keys** in the **ptable**. A warning message will be generated if those ranges do not match.
 
-A ptable file needs to be supplied which determines which cells are perturbed 
-and by how much (most cells are perturbed by +0). 
+Cell Key Perturbation is consistent and repeatable, so the same cells are always perturbed in the same way. The **record keys** need to be unchanged, changing the **record keys** would create inconsistent results and provide much less protection. 
 
-The ptable used and the record keys attached to the microdata should ideally use 
-the same record key range, 0-255 or 0-4095. A warning message will be generated 
-if the record key ranges do not match.
+### Perturbation Table (P-table)
 
-By default a ptable that applies the '10-5 rule' is provided with the method 
-package and works with record keys in the range 0-255. This ptable will 
-remove all cells \<10, and round all others to the nearest 5. This provides 
-more protection than necessary but will ensure safe outputs. If this ptable 
-is used with admin data, meaning the record key ranges do not match, it 
-is acceptable to disregard the warning in this circumstance.
+The **perturbation table** contains the parameters which determine which cells are perturbed by how much and which are not (most cells are perturbed by +0). The **ptable** contains each possible combination of **cell key** (`ckey`) and **cell value** (`pcv`), and the **perturbation value** (`pvalue`) for each combination. You must use the **ptables** provided with the **microdata** you are working with to ensure sufficient and consistent protection. 
 
-Other ptables may be available depending on the data used, for example 
-census 2021 data will require the ptable_census21 to be used and is based 
-on cell keys in the range 0-255.
+A sample **ptable** that applies the '10-5 rule' is provided with the package and works with **record keys** in the range 0-255. This **ptable** will remove all cells \<10, and round all others to the nearest 5. This provides more protection than necessary but will ensure safe outputs.
 
-Cell Key Perturbation is consistent and repeatable, so the same cells are 
-always perturbed in the same way provided the record keys are not changed.
+Other **ptables** may be available depending on the **microdata** used, for example census 2021 data will require the `ptable_census21` to be used and is based on cell keys in the range 0-255.
 
 
 ## How to Use the Method
@@ -100,7 +98,7 @@ always perturbed in the same way provided the record keys are not changed.
 ### Method Input
 
 The `create_perturbed_table()` function which creates the frequency table with 
-cell key perturbation applied has the following arguments:
+cell key perturbation applied has the following parameters:
 
 ```py
 create_perturbed_table(data, geog, tab_vars, record_key, ptable, threshold)
@@ -262,20 +260,7 @@ The `ckey`, `pcv`, `pre_sdc_count` and `pvalue` columns should be dropped before
 contingency table is published.
 
 
-# Methodology
-
-## Terminology
-
-- ***Microdata*** - data at the level of individual respondents
-- ***Record key*** - A random number assigned to each record 
-- ***Cell value*** - The number of records or frequency for a cell
-- ***Cell key*** - The sum of record keys for a given cell
-- ***pvalue*** - perturbation value. The value of noise added to cells, e.g. +1, -1
-- ***pcv*** - perturbation cell value. This is an amended cell value needed to merge on the ptable
-- ***ptable*** - perturbation table. The look-up file containing the pvalues, this determines which cells get perturbed and by how much.
-
-
-## Statistical Process Flow / Formal Definition
+# Methodolgy - Statistical Process Flow
 
 The user is required to supply **microdata** and to specify which columns in the
 data they want to tabulate by. They must also supply a **ptable** which will 
@@ -328,19 +313,6 @@ supplied with this method, `ptable_10_5`, applies the 10_5 rule (supressing
 values less than 10 and rounding others to the nearest 5) for **record keys** 
 in the range 0-255.
 
-## Assumptions & Vailidity
-
-The **microdata** must contain one column per variable, which are expected to be 
-categorical (they can be numeric but categorical is more suitable for 
-frequency tables). 
-
-**Record keys** should already be attached to the data, and the range of record 
-keys in the **ptable** should match that in the data, 0-255 or 0-4095.
-
-Cell Key Perturbation is consistent and repeatable, so the same cells are 
-always perturbed in the same way. The **record keys** need to be unchanged, 
-changing the **record keys** would create inconsistent results and provide 
-much less protection. 
 
 # Additional Information
 
