@@ -24,7 +24,13 @@ Cell Key Perturbation is consistent and repeatable, so the same cells are always
 
 It is expected that users will tabulate 1 to 4 variables for a particular geography level - for example, tabulate age by sex at local authority level. 
 
-Cell key perturbation is currently only available using Python within the IDS. 
+Cell key perturbation is currently available using Python and BigQuery within the IDS. 
+
+### BigQuery
+
+BigQuery version allow users to perform perturbation without reading raw data into local memory. The package would craete the frequency table and run perturbation with a SQL query. Then, it converts the final perturbed table into a pandas dataframe as an output. 
+
+This will allow users to run the method on large datasets without breaking the memory limits. 
 
 ### Terminology
 
@@ -39,7 +45,7 @@ Cell key perturbation is currently only available using Python within the IDS.
 ## Requirements 
 
 - This method requires microdata and a perturbation table (ptable) file. 
-- The microdata and the ptable each needs to be supplied as a pandas dataframe. (BigQuery version will be available in version 3.0)
+- The microdata and the ptable both need to be supplied as pandas dataframes or BigQuery tables.
 - The microdata must include a record key variable for cell key perturbation to be applied.
 
 ### Microdata and Record Keys
@@ -76,32 +82,88 @@ Once this is done, in the terminal, type the following: 
 pip install cell_key_perturbation
 ```
 
-Press return and wait for this to install cell_key_perturbation version 2.1.1. You can close this window when it is finished.  
+Press return and wait for this to install `cell_key_perturbation` version 3.0.0. You can close this window when it is finished.  
 
 ## Using the SML method
 
-Within your working notebook (Python), you need to import the function using 
+Within your working notebook (Python), you need to import the function: 
 
 ```python
+# for pandas
 from cell_key_perturbation.create_perturbed_table import create_perturbed_table
+
+# for BigQuery
+from cell_key_perturbation.bigquery import create_perturbed_table_bigquery
 ```
 
 You can then call the method using the following parameters:
 
 ```python
-create_perturbed_table(data, geog, tab_vars, record_key, ptable, threshold)
+# for pandas
+create_perturbed_table(data, ptable, geog, tab_vars, record_key, threshold)
+
+# for BigQuery
+create_perturbed_table_bigquery(client, data, ptable, geog, tab_vars, record_key, threshold)
 ```
 
-- **`data`** - (Microdata) - a pandas dataframe containing the micro-level data to be tabulated and perturbed.
+Parameters specific for BigQuery version:
+- **`client`** - Google Cloud BigQuery Client object
+- **`data`** - (Microdata) - a `string` for the full name of micro-level `data` in BigQuery in "\<PROJECT>.\<DATASET>.\<TABLE>" format.
+- **`ptable`** - (Perturbation table) - a `string` for the full name of `ptable` in BigQuery in "\<PROJECT>.\<DATASET>.\<TABLE>" format.
+
+Parameters specific for pandas version:
+- **`data`** - (Microdata) - a `pandas.DataFrame` containing the micro-level `data` to be tabulated and perturbed.
+- **`ptable`** - (Perturbation table) - a `pandas.DataFrame` containing the `ptable` file which determines when 
+perturbation is applied.
+
+Common parameters for both versions:
 - **`geog`** - (Geography) - a string vector giving the column name in `data` that contains the desired geography level you wish to tabulate at, e.g. `["Local_Authority", "Ward"]`. This can be the empty vector, `geog=[]`, if no geography level is required.
 - **`tab_vars`** - (Variables to tabulate) - a string vector giving the column names in `data` of the variables to be tabulated e.g. `["Age","Health","Occupation"]`. This can also be the empty vector, `tab_vars=[]`. However, at least one of `tab_vars` or `geog` must be populated. if both are left blank an error message will be returned.
 - **`record_key`** - a string containing the column name in `data` giving the record keys required for perturbation. 
-- **`ptable`** - (Perturbation table) - a pandas dataframe containing the `ptable` file which determines when 
-perturbation is applied.
 - **`threshold`** - the value below which a count is suppressed (default 10).
 
+## How to Use the Method in BigQuery
 
-## Worked Example with Synthetic Data
+1. Import `create_perturbed_table_bigquery()` function and define the BigQuery client:
+```python
+from cell_key_perturbation.bigquery import create_perturbed_table_bigquery
+from google.cloud import bigquery
+
+client = bigquery.Client()
+```
+
+2. Define full names of the microdata and perturbation table in the BigQuery with full location, for example:
+```python
+microdata = "<PROJECT_ID>.<DATASET_ID>.<microdata>"
+ptable = "<PROJECT_ID>.<DATASET_ID>.<ptable>"
+```
+
+3. Define variables and parameters, for example:
+```python
+geog = ["Region"]
+tab_vars = ["Age","Health","Occupation"]
+record_key = "record_key"
+threshold = 10
+```
+
+4. Call the function:
+```python
+perturbed_table = create_perturbed_table_bigquery(client = client,
+                                                  data = microdata,
+                                                  ptable = ptable,
+                                                  geog = geog,
+                                                  tab_vars = tab_vars,
+                                                  record_key = record_key,
+                                                  threshold = 10)
+```
+
+5. The returned `perturbed_table` is a `pandas.DataFrame`. You need to drop disclosive columns before exporting the output from the secure data environment. Please refer to the **"Interpreting the Output"** and **"Saving the Output"** sections below for more details.
+```python
+output_table = perturbed_table.drop(columns = ["pre_sdc_count", "ckey", "pcv", "pvalue"])
+```
+
+
+## Worked Example with Synthetic Data in pandas
 
 This is an example showing how to create a perturbed table from sample data 
 generated with provided test data generation functions in this package 
@@ -167,7 +229,7 @@ perturbed_table = create_perturbed_table(data = microdata,
                                          threshold=10)
 ```
 
-## Interpreting the output
+## Interpreting the Output
 
 The output from the code is a `pandas.DataFrame` containing a frequency table with 
 the counts having been affected by perturbation, as specified in the ptable. 
@@ -203,7 +265,7 @@ are the categories you've summarised by, plus the `count` column.
 contingency table is published. Otherwise, the perturbation can be unpicked and the output will be disclosive.**
 
 
-## Saving the output
+## Saving the Output
 
 Before the data are ready to be output the disclosive columns must be dropped. These cannot be output as they would allow for the perturbation to be unpicked. This code assumes that you have not changed the default column names; please update it if you have. `drop()` will work on a list of column names in this case, and this code puts it in a new dataframe.
 
@@ -224,6 +286,7 @@ The ONS Statistical Methods Library at https://statisticalmethodslibrary.ons.gov
 
 * Further information about the methods including a link to the GitHub repository which contains detailed API information as part of the method code.
 * Information about other methods available through the library.
+
 
 
 
