@@ -240,23 +240,24 @@ The table will be in the following format:
 
   | var1  | var5  | var8  | pre_sdc_count | ckey  | pcv   | pvalue | count  |
   |  :--- | :---- | :---- |       :----   | :---- | :---- | :----  | :----  | 
-  |  1    |   1   |   A   |         16    |  64   |  16   |   -1   |   15   | 
-  |  1    |   1   |   B   |          5    | 196   |   5   |   -5   |    0   | 
-  |  1    |   1   |   C   |         10    | 123   |  10   |    0   |   10   | 
-  |  1    |   1   |   D   |         10    |   3   |  10   |    0   |   10   | 
-  |  1    |   2   |   A   |         12    | 149   |  12   |   -2   |   10   | 
+  |  1    |   1   |   A   |         10    | 173   |  10   |    0   |   10   | 
+  |  1    |   1   |   B   |         10    |  88   |  10   |    0   |   10   | 
+  |  1    |   1   |   C   |          7    | 180   |   7   |   -7   |  nan   | 
+  |  1    |   1   |   D   |         14    |  66   |  14   |    1   |   15   | 
+  |  1    |   2   |   A   |         11    | 190   |  11   |   -1   |   10   | 
   | ...   | ...   | ...   |        ...    | ...   | ...   |  ...   |  ...   | 
   
 
 The table contains the variables used as the categories used to summarise the 
 data (in this example `var1`, `var5` & `var8`), and five other columns:
 
-- `ckey` is the sum of record keys for each combination of variables
-- `pcv` is the perturbation cell value, the pre-perturbation count modulo 750
-- `pre_sdc_count` is the pre-perturbation count 
+- `ckey` is the sum of record keys for each combination of variables.
+- `pcv` is the perturbation cell value, the pre-perturbation count modulo 750.
+- `pre_sdc_count` is the pre-perturbation count.
 - `pvalue` is the perturbation applied to the original count, most commonly 
 it will be 0. This is obtained from the ptable using a join on `ckey` and `pcv`.
-- `count` is the post-perturbation count, the values to be output
+- `count` is the post-perturbation count, the values to be output. It will be
+set to `NaN` if the value is suppressed for being below the threshold.
 
 The columns you are most likely interested in are the variables, which 
 are the categories you've summarised by, plus the `count` column.
@@ -286,6 +287,7 @@ The ONS Statistical Methods Library at https://statisticalmethodslibrary.ons.gov
 
 * Further information about the methods including a link to the GitHub repository which contains detailed API information as part of the method code.
 * Information about other methods available through the library.
+
 
 
 
