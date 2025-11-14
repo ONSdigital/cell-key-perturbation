@@ -166,7 +166,7 @@ perturbed_table = create_perturbed_table_bigquery(client = client,
                                                   geog = geog,
                                                   tab_vars = tab_vars,
                                                   record_key = record_key,
-                                                  threshold = 10)
+                                                  threshold = threshold)
 ```
 
 5. The returned `perturbed_table` is a `pandas.DataFrame`. You need to drop disclosive columns before exporting the output from the secure data environment. Please refer to the **"Interpreting the Output"** and **"Saving the Output"** sections below for more details.
@@ -238,7 +238,7 @@ perturbed_table = create_perturbed_table(data = microdata,
                                          geog = ["var1"],
                                          tab_vars = ["var5","var8"],
                                          ptable = ptable_10_5,
-                                         threshold=10)
+                                         threshold = 10)
 ```
 
 ## Interpreting the Output
