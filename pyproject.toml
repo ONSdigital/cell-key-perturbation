@@ -4,7 +4,9 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "cell_key_perturbation"
-authors = [{name = "Iain Dove", email = "sdc.queries@ons.gov.uk"}]
+authors = [{name = "Iain Dove", email = "sdc.queries@ons.gov.uk"},
+           {name = "Ahmet Aydin"}
+          ]
 license = {file = "LICENSE"}
 classifiers = ["License :: OSI Approved :: MIT License"]
 dynamic = ["version", "description"]

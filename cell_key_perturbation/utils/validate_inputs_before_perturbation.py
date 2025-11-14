@@ -60,6 +60,111 @@ def validate_inputs(data, ptable, geog, tab_vars, record_key, threshold):
     print("Input validation completed.")
 
 
+#%%# Validation with BigQuery
+
+def validate_inputs_bigquery(client, data, ptable, geog, tab_vars, record_key, threshold):
+    """
+    Validates BigQuery inputs for a perturbation process.
+    
+    - Validate other input arguments
+        - Check that at least one variable specified for geog or tab_vars
+        - Check variable is specified for record_key
+        - Check threshold is an integer   
+    - Validate microdata and ptable contain required columns
+        - Check data contain the specified geog, tab_vars & record_key
+        - Check ptable contains required columns
+    - Check data has sufficient % records with record keys to apply perturbation
+    - Check if the range of record keys and cell keys match
+
+    Parameters:
+        client : google.cloud.bigquery.client
+            Google Cloud BigQuery Client object
+        data : str
+            Full name and location of the microdata table in BigQuery
+        ptable : str
+            Full name and location of the ptable in BigQuery
+        geog : list of str
+            Geographic variable names
+        tab_vars : list of str
+            Tabulation variable names
+        record_key : str
+            Name of the record key column
+        threshold : integer
+            Suppression threshold
+
+    Raises:
+        ValueError, Exception or Warning message if any validation fails.
+    """
+    
+    _check_input_arguments(geog, tab_vars, record_key, threshold)
+
+
+    # Check geog, tab_vars & record_key specified are columns in data
+    required_columns = geog + tab_vars + [record_key]
+    existing_columns = [field.name for field in client.get_table(data).schema]
+    missing = [col for col in required_columns if col not in existing_columns]
+    if missing:
+        raise ValueError(f"Missing columns in '{data}': {missing}")
+
+
+    # Check ptable contains required columns
+    ptable_cols = [field.name for field in client.get_table(ptable).schema]
+    for col in ["ckey", "pcv", "pvalue"]:
+        if col not in ptable_cols:
+            raise ValueError(f"Missing column '{col}' in perturbation table '{ptable}'.")
+
+
+    # Check if the range of record keys and cell keys match
+    range_query = f"""
+    WITH
+        data_range AS (
+            SELECT
+                MIN(CAST({record_key} AS INT64)) AS min_rkey,
+                MAX(CAST({record_key} AS INT64)) AS max_rkey
+            FROM `{data}`
+        ),
+        ptable_range AS (
+            SELECT
+                MIN(ckey) AS min_ckey,
+                MAX(ckey) AS max_ckey
+            FROM `{ptable}`
+        )
+    SELECT
+        d.min_rkey,
+        d.max_rkey,
+        p.min_ckey,
+        p.max_ckey
+    FROM data_range d, ptable_range p;
+    """
+    keys_range = client.query(range_query).to_dataframe()
+
+    min_rkey = keys_range["min_rkey"].iloc[0]
+    min_ckey = keys_range["min_ckey"].iloc[0]
+    max_rkey = keys_range["max_rkey"].iloc[0]
+    max_ckey = keys_range["max_ckey"].iloc[0]
+    
+    _check_key_range(min_ckey, max_ckey, min_rkey, max_rkey)
+
+
+    # Check data has sufficient % records with record keys to apply perturbation
+    records_key_query = f"""
+    SELECT
+        COUNT(*) AS total_records,
+        COUNTIF({record_key} IS NULL) AS null_record_keys,
+        ROUND(100.0 * COUNTIF({record_key} IS NOT NULL) / COUNT(*), 2) AS percent_with_keys
+    FROM {data};
+    """
+    rkey = client.query(records_key_query).to_dataframe()
+    
+    rkey_nan_count = rkey["null_record_keys"].iloc[0]
+    rkey_percent = rkey["percent_with_keys"].iloc[0]
+    
+    _check_missing_record_key(rkey_nan_count, rkey_percent)
+
+
+    print("Input validation completed.")
+
+
 #%%# Low level validation functions
 
 def _check_input_data_types(data, ptable):
