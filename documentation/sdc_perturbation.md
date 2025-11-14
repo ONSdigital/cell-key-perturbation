@@ -134,8 +134,8 @@ client = bigquery.Client()
 
 2. Define full names of the microdata and perturbation table in the BigQuery with full location, for example:
 ```python
-microdata = "<PROJECT_ID>.<DATASET_ID>.<microdata>"
-ptable = "<PROJECT_ID>.<DATASET_ID>.<ptable>"
+microdata = "<PROJECT>.<DATASET>.<microdata>"
+ptable = "<PROJECT>.<DATASET>.<ptable>"
 ```
 
 3. Define variables and parameters, for example:
@@ -154,7 +154,7 @@ perturbed_table = create_perturbed_table_bigquery(client = client,
                                                   geog = geog,
                                                   tab_vars = tab_vars,
                                                   record_key = record_key,
-                                                  threshold = 10)
+                                                  threshold = threshold)
 ```
 
 5. The returned `perturbed_table` is a `pandas.DataFrame`. You need to drop disclosive columns before exporting the output from the secure data environment. Please refer to the **"Interpreting the Output"** and **"Saving the Output"** sections below for more details.
@@ -226,7 +226,7 @@ perturbed_table = create_perturbed_table(data = microdata,
                                          geog = ["var1"],
                                          tab_vars = ["var5","var8"],
                                          ptable = ptable_10_5,
-                                         threshold=10)
+                                         threshold = 10)
 ```
 
 ## Interpreting the Output
@@ -287,6 +287,7 @@ The ONS Statistical Methods Library at https://statisticalmethodslibrary.ons.gov
 
 * Further information about the methods including a link to the GitHub repository which contains detailed API information as part of the method code.
 * Information about other methods available through the library.
+
 
 
 
