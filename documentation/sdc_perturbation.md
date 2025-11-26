@@ -10,7 +10,7 @@ You must also read the [Statistical Disclosure Control Guidance for analysts](sd
 
 ## Introduction
 
-Statistical Disclosure Controls are methods for checking whether data is disclosive or not. Regardless of how research is done, data can be inadvertently disclosive. For example any statistic that references a small number of people (for example, 1 or 2 people from a survey) inherently runs the risk of revealing their identity. The data may not directly identify individuals on its own, but in combination with enough other information it can be possible to indirectly identify people (known as jigsaw identification).  
+Statistical Disclosure Controls are methods for checking whether data is disclosive or not. Regardless of how research is done, data can be inadvertently disclosive. For example any statistic that references a small number of people (for example, 1 or 2 people from a survey) inherently runs the risk of revealing their identity. The data may not directly identify individuals on its own, but in combination with enough other information it can be possible to indirectly identify people (known as jigsaw identification). Another common risk arises from differencing, where publishing overlapping aggregates allows suppressed values to be disclosed by subtraction. This can unintentionally expose small groups or individuals.
 
 To prevent this and maintain an ethical statistical platform, all outputs from the IDS must undergo SDC and are then checked before they are allowed to leave the platform. 
 
@@ -28,7 +28,7 @@ Cell key perturbation is currently available using Python and BigQuery within th
 
 ### BigQuery
 
-BigQuery version allow users to perform perturbation without reading raw data into local memory. The package would craete the frequency table and run perturbation with a SQL query. Then, it converts the final perturbed table into a pandas dataframe as an output. 
+BigQuery version allow users to perform perturbation without reading raw data into local memory. The package would create the frequency table and run perturbation with a SQL query. Then, it converts the final perturbed table into a pandas dataframe as an output. 
 
 This will allow users to run the method on large datasets without breaking the memory limits. 
 
@@ -38,19 +38,21 @@ This will allow users to run the method on large datasets without breaking the m
 - ***Record key*** - A random number assigned to each record 
 - ***Cell value*** - The number of records or frequency for a cell
 - ***Cell key*** - The sum of record keys for a given cell
-- ***pvalue*** - perturbation value. The value of noise added to cells, e.g. +1, -1
-- ***pcv*** - perturbation cell value. This is an amended cell value needed to merge on the ptable
-- ***ptable*** - perturbation table. The look-up file containing the pvalues, this determines which cells get perturbed and by how much.
+- ***pvalue*** - Perturbation value. The value of noise added to cells, e.g. +1, -1
+- ***pcv*** - Perturbation cell value. This is an amended cell value needed to merge on the ptable
+- ***ptable*** - Perturbation table. The look-up file containing the pvalues, this determines which cells get perturbed and by how much.
 
 ## Requirements 
 
 - This method requires microdata and a perturbation table (ptable) file. 
 - The microdata and the ptable both need to be supplied as pandas dataframes or BigQuery tables.
 - The microdata must include a record key variable for cell key perturbation to be applied.
+- The specific ptable provided with the microdata you are working with needs to be used e.g. `ptable_census21` for census 2021
 
 ### Microdata and Record Keys
 
-**Microdata** must be row-level, i.e. one row per statistical unit such as person or household. **Microdata** must contain one column per variable, which are expected to be categorical (they can be numeric but categorical is more suitable for frequency tables). 
+**Microdata** must be row-level, i.e. one row per statistical unit such as person or household. **Microdata** must contain one column per variable, which are expected to be categorical (they can be numeric but categorical is more suitable for frequency tables).
+
 
 **Record keys** should already be attached to the **microdata** as a column of integers in the range 0-255 or 0-4095. The name of the **record key** column could change in different **microdata** tables. For example, **record key** columns in census data tables are named as `resident_record_key`, `household_record_key`, or `family_record_key` depending on the table type.
 
@@ -64,7 +66,7 @@ Cell Key Perturbation is consistent and repeatable, so the same cells are always
 
 The **perturbation table** contains the parameters which determine which cells are perturbed by how much and which are not (most cells are perturbed by +0). The **ptable** contains each possible combination of **cell key** (`ckey`) and **cell value** (`pcv`), and the **perturbation value** (`pvalue`) for each combination. 
 
-A sample **ptable** that applies the '10-5 rule' is provided with the package and works with **record keys** in the range 0-255. This **ptable** will remove all cells \<10, and round all others to the nearest 5. This provides more protection than necessary but will ensure safe outputs.
+A sample **ptable** that applies the '10-5 rule' is provided with the package and works with **record keys** in the range 0-255. This **ptable** will remove all cells below the threshold of 10, and round all others to the nearest 5. This provides more protection and will ensure safe outputs.
 
 Other **ptables** may be available depending on the **microdata** used, for example census 2021 data will require the `ptable_census21` to be used and is based on cell keys in the range 0-255.
 
@@ -232,9 +234,9 @@ perturbed_table = create_perturbed_table(data = microdata,
 ## Interpreting the Output
 
 The output from the code is a `pandas.DataFrame` containing a frequency table with 
-the counts having been affected by perturbation, as specified in the ptable. 
+the perturbed counts, as specified in the ptable. 
 
-For most ptables, the most obvious effect will be that all counts less than the threshold will have been removed. Removing counts below a threshold is a condition of exporting data from IDS and many other secure environments.
+For most ptables, the most obvious effect will be that all counts lower than the threshold of 10 will have been removed. Supressing counts below the threshold is a condition that need to be met when exporting data from IDS and many other secure environments such as SRS.
 
 The table will be in the following format:
 
@@ -259,8 +261,8 @@ it will be 0. This is obtained from the ptable using a join on `ckey` and `pcv`.
 - `count` is the post-perturbation count, the values to be output. It will be
 set to `NaN` if the value is suppressed for being below the threshold.
 
-The columns you are most likely interested in are the variables, which 
-are the categories you've summarised by, plus the `count` column.
+The columns needed for an export, are the variables, which 
+are the categories you've summarised by (var1, var5, var8 in this example), plus the `count` column.
 
 **WARNING! - The `ckey`, `pcv`, `pre_sdc_count` and `pvalue` columns should be dropped before the 
 contingency table is published. Otherwise, the perturbation can be unpicked and the output will be disclosive.**
@@ -268,7 +270,7 @@ contingency table is published. Otherwise, the perturbation can be unpicked and 
 
 ## Saving the Output
 
-Before the data are ready to be output the disclosive columns must be dropped. These cannot be output as they would allow for the perturbation to be unpicked. This code assumes that you have not changed the default column names; please update it if you have. `drop()` will work on a list of column names in this case, and this code puts it in a new dataframe.
+Before the data is ready to be output the disclosive columns must be dropped. These cannot be output as they would allow for the perturbation to be unpicked. This code assumes that you have not changed the default column names; please update it if you have. `drop()` will work on a list of column names in this case, and this code puts it in a new dataframe.
 
 ```python
 output_table = perturbed_table.drop(columns = ["pre_sdc_count", "ckey", "pcv", "pvalue"])
@@ -287,6 +289,7 @@ The ONS Statistical Methods Library at https://statisticalmethodslibrary.ons.gov
 
 * Further information about the methods including a link to the GitHub repository which contains detailed API information as part of the method code.
 * Information about other methods available through the library.
+
 
 
 
