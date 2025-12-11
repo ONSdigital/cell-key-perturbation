@@ -239,7 +239,7 @@ threshold of 10 will have been removed. Supressing counts below the threshold is
 condition that need to be met when exporting data from IDS and many other secure 
 environments such as SRS.
 
-The perturbation code will treat categories for missing data in the same way it treats other categories. If you would like to exclude missing data from your outputs, you will need to remove the missing categories either before or after applying the perturbation.
+The perturbation code will treat categories for missing data in the same way as it treats other categories. If you would like to exclude missing data from your outputs, you will need to remove the missing data categories either before or after applying the perturbation.
 
 The table will be in the following format:
 
@@ -294,6 +294,7 @@ The ONS Statistical Methods Library at https://statisticalmethodslibrary.ons.gov
 
 * Further information about the methods including a link to the GitHub repository which contains detailed API information as part of the method code.
 * Information about other methods available through the library.
+
 
 
 
