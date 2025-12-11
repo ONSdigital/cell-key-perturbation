@@ -72,6 +72,7 @@ pip install cell_key_perturbation
 - This method requires microdata and a perturbation table (ptable) file. 
 - The microdata and the ptable both need to be supplied as pandas dataframes or BigQuery tables.
 - The microdata must include a record key variable for cell key perturbation to be applied.
+- The specific ptable provided with the microdata you are working with needs to be used e.g. `ptable_census21` for census 2021
 
 ### Microdata and Record Keys
 
@@ -177,9 +178,7 @@ output_table = perturbed_table.drop(columns = ["pre_sdc_count", "ckey", "pcv", "
 
 ## Worked Example with Synthetic Data in pandas
 
-This is an example showing how to create a perturbed table from sample data 
-generated with provided test data generation functions in this package 
-in order to showcase the method.
+This is an example showing how to create a perturbed table from test data. The test data can be generated using functions available in this package.
 
 To generate example microdata and a perturbation table for testing purposes, 
 use the following code:
@@ -248,6 +247,8 @@ the counts having been affected by perturbation, as specified in the ptable.
 
 For most ptables, the most obvious effect will be that all counts less than the threshold will have been removed. Removing counts below a threshold is a condition of exporting data from IDS and many other secure environments.
 
+The perturbation code will treat categories for missing data in the same way as it treats other categories. If you would like to exclude missing data from your outputs, you will need to remove the missing data categories either before or after applying the perturbation.
+
 The table will be in the following format:
 
   | var1  | var5  | var8  | pre_sdc_count | ckey  | pcv   | pvalue | count  |
@@ -314,8 +315,9 @@ The `create_perturbed_table()` function counts how many rows in the data
 contain each combination of categories e.g. how many respondents are of
 each age category in each local authority area. The sum of the **record
 keys** for each record in each cell is also calculated. Modulo 256 or 4096
-of the sum is taken so this **cell key** is within range. The table now has 
-**perturbation cell values** (`pcv`) and **cell keys** (`ckey`).
+of this sum is taken so the range of the **cell keys** matches the range 
+of the **record keys** is within range. The table now has **perturbation 
+cell values** (`pcv`) and **cell keys** (`ckey`).
 
 The **ptable** is merged with the data, matching on `pcv` and `ckey`. The merge 
 provides a `pvalue` for each cell. The **post perturbation count** (`count`) 
@@ -343,7 +345,7 @@ specify the value for the **threshold**, but if they do not, the default value o
 applied.
 
 As well as specifying the level of perturbation, the **ptable** can also be used 
-to apply rounding, and a ***threshold** for small counts. The example **ptable** 
+to apply rounding, and a **threshold** for small counts. The example **ptable** 
 supplied with this method, `ptable_10_5`, applies the 10_5 rule (supressing 
 values less than 10 and rounding others to the nearest 5) for **record keys** 
 in the range 0-255.
