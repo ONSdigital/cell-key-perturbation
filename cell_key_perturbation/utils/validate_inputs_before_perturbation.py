@@ -152,7 +152,7 @@ def validate_inputs_bigquery(client, data, ptable, geog, tab_vars, record_key, t
         COUNT(*) AS total_records,
         COUNTIF({record_key} IS NULL) AS null_record_keys,
         ROUND(100.0 * COUNTIF({record_key} IS NOT NULL) / COUNT(*), 2) AS percent_with_keys
-    FROM {data};
+    FROM `{data}`;
     """
     rkey = client.query(records_key_query).to_dataframe()
     
