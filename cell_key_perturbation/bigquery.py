@@ -51,6 +51,8 @@ def create_perturbed_table_bigquery(client,
     record_key : str
         The column name in 'data' that contains the record keys required for 
         perturbation. For example: "Record_Key"
+        If data contains "ons_id" and use_existing_ons_id = True,
+        set (record_key = None), as record key will be generated from "ons_id".
     use_existing_ons_id : Boolean
         Whether to create record keys from ons_id, if ons_id exists in data.
         It will be irrelevant if microdata does not contain ons_id.

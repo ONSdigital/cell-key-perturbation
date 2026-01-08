@@ -15,8 +15,9 @@ def validate_inputs(data, ptable, geog, tab_vars, record_key, threshold):
 
     - Type validation on input data & ptable
     - Validate other input arguments
+        - Check that geog and tab_vars are lists of strings
         - Check that at least one variable specified for geog or tab_vars
-        - Check variable is specified for record_key
+        - Check specified record_key is string or None
         - Check threshold is an integer   
     - Validate microdata and ptable contain required columns
         - Check data contain the specified geog, tab_vars & record_key
@@ -76,7 +77,7 @@ def validate_inputs_bigquery(client,
     - Validate input arguments
         - Check that geog and tab_vars are lists of strings
         - Check that at least one variable specified for geog or tab_vars
-        - Check variable is specified for record_key or None
+        - Check specified record_key is string or None
         - Check threshold is an integer   
     - Validate microdata and ptable contain required columns
         - Check data contain the specified geog, tab_vars & record_key
@@ -222,6 +223,7 @@ def _check_input_arguments(geog, tab_vars, record_key, threshold):
     Raises:
     - Exception if any validation fails.
     """
+    # Check that geog and tab_vars are lists of strings
     if not isinstance(geog, list):
         raise TypeError("Expected 'geog' to be a list, "
                         f"but got '{type(geog).__name__}'!")
@@ -241,7 +243,7 @@ def _check_input_arguments(geog, tab_vars, record_key, threshold):
         raise Exception("No variables for tabulation.",
                         "Please specify value for geog or tab_vars.")
     
-    # Check variable is specified for record_key if not None
+    # Check specified record_key is string or None
     if record_key is not None and not isinstance(record_key, str):
         raise TypeError("Expected 'record_key' to be str or None, "
                         f"but got '{type(record_key).__name__}'!")
