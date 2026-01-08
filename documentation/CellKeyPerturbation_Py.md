@@ -36,7 +36,7 @@ Cell key perturbation is currently available using Python and BigQuery.
 
 ### BigQuery
 
-BigQuery version allow users to perform perturbation without reading raw data into local memory. The package would craete the frequency table and run perturbation with a SQL query. Then, it converts the final perturbed table into a pandas dataframe as an output. 
+The BigQuery version allows users to perform perturbation without reading raw data into local memory. The package creates the frequency table and runs perturbation with an SQL query. Then, it converts the final perturbed table into a pandas dataframe as an output. 
 
 This will allow users to run the method on large datasets without breaking the memory limits. 
 
@@ -46,9 +46,9 @@ This will allow users to run the method on large datasets without breaking the m
 - ***Record key*** - A random number assigned to each record 
 - ***Cell value*** - The number of records or frequency for a cell
 - ***Cell key*** - The sum of record keys for a given cell
-- ***pvalue*** - perturbation value. The value of noise added to cells, e.g. +1, -1
-- ***pcv*** - perturbation cell value. This is an amended cell value needed to merge on the ptable
-- ***ptable*** - perturbation table. The look-up file containing the pvalues, this determines which cells get perturbed and by how much.
+- ***pvalue*** - Perturbation value. The value of noise added to cells, e.g. +1, -1
+- ***pcv*** - Perturbation cell value. This is an amended cell value needed to merge on the ptable
+- ***ptable*** - Perturbation table. The look-up file containing the pvalues, this determines which cells get perturbed and by how much.
 
 
 # User Notes
@@ -72,6 +72,7 @@ pip install cell_key_perturbation
 - This method requires microdata and a perturbation table (ptable) file. 
 - The microdata and the ptable both need to be supplied as pandas dataframes or BigQuery tables.
 - The microdata must include a record key variable for cell key perturbation to be applied.
+- The specific ptable provided with the microdata you are working with needs to be used e.g. `ptable_census21` for census 2021
 
 ### Microdata and Record Keys
 
@@ -89,7 +90,7 @@ Cell Key Perturbation is consistent and repeatable, so the same cells are always
 
 The **perturbation table** contains the parameters which determine which cells are perturbed by how much and which are not (most cells are perturbed by +0). The **ptable** contains each possible combination of **cell key** (`ckey`) and **cell value** (`pcv`), and the **perturbation value** (`pvalue`) for each combination. 
 
-A sample **ptable** that applies the '10-5 rule' is provided with the package and works with **record keys** in the range 0-255. This **ptable** will remove all cells \<10, and round all others to the nearest 5. This provides more protection than necessary but will ensure safe outputs.
+A sample **ptable** that applies the '10-5 rule' is provided with the package and works with **record keys** in the range 0-255. This **ptable** will remove all cells below the threshold of 10, and round all others to the nearest 5. This provides more protection and will ensure safe outputs.
 
 Other **ptables** may be available depending on the **microdata** used, for example census 2021 data will require the `ptable_census21` to be used and is based on cell keys in the range 0-255.
 
@@ -177,9 +178,7 @@ output_table = perturbed_table.drop(columns = ["pre_sdc_count", "ckey", "pcv", "
 
 ## Worked Example with Synthetic Data in pandas
 
-This is an example showing how to create a perturbed table from sample data 
-generated with provided test data generation functions in this package 
-in order to showcase the method.
+This is an example showing how to create a perturbed table from test data. The test data can be generated using functions available in this package.
 
 To generate example microdata and a perturbation table for testing purposes, 
 use the following code:
@@ -246,7 +245,13 @@ perturbed_table = create_perturbed_table(data = microdata,
 The output from the code is a `pandas.DataFrame` containing a frequency table with 
 the counts having been affected by perturbation, as specified in the ptable. 
 
-For most ptables, the most obvious effect will be that all counts less than the threshold will have been removed. Removing counts below a threshold is a condition of exporting data from IDS and many other secure environments.
+For most ptables, the most obvious effect will be that all counts lower than the 
+threshold of 10 will have been removed. Supressing counts below the threshold is a 
+condition that need to be met when exporting data from IDS and many other secure 
+environments such as SRS.
+
+The perturbation code will treat categories for missing data in the same way as it treats other categories. 
+If you would like to exclude missing data from your outputs, you will need to remove the missing data categories either before or after applying the perturbation.
 
 The table will be in the following format:
 
@@ -280,7 +285,7 @@ contingency table is published. Otherwise, the perturbation can be unpicked and 
 
 ## Saving the Output
 
-Before the data are ready to be output the disclosive columns must be dropped. These cannot be output as they would allow for the perturbation to be unpicked. This code assumes that you have not changed the default column names; please update it if you have. `drop()` will work on a list of column names in this case, and this code puts it in a new dataframe.
+Before the table is ready to be published the disclosive columns must be dropped. These cannot be output as they would allow for the perturbation to be unpicked. This code assumes that you have not changed the default column names; please update it if you have. `drop()` will work on a list of column names in this case, and this code puts it in a new dataframe.
 
 ```python
 output_table = perturbed_table.drop(columns = ["pre_sdc_count", "ckey", "pcv", "pvalue"])
@@ -292,7 +297,9 @@ To save this dataframe as a csv use the pandas to_csv method:
 output_table.to_csv(“yourfilename.csv”, index = False)
 ```
 
-Your file name should end “.csv”. If you only specify a file name in the path it will save to your main directory. Setting ‘index’ to ‘False’ here stops it from adding a new ‘index’ column with the row number. Take that part out if you do want an index column.
+Your file name should end “.csv”. If you only specify a file name in the path it will save to your main directory. 
+Setting ‘index’ to ‘False’ here stops it from adding a new ‘index’ column with the row number. 
+This argument can be removed if you do want to create an index column.
 
 
 # Methodolgy - Statistical Process Flow
