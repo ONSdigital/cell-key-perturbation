@@ -10,6 +10,7 @@ def create_perturbed_table_bigquery(client,
                                     geog,
                                     tab_vars,
                                     record_key,
+                                    use_existing_ons_id = True,
                                     threshold = 10
                                     ):
     """
@@ -50,6 +51,10 @@ def create_perturbed_table_bigquery(client,
     record_key : str
         The column name in 'data' that contains the record keys required for 
         perturbation. For example: "Record_Key"
+    use_existing_ons_id : Boolean
+        Whether to create record keys from ons_id, if ons_id exists in data.
+        It will be irrelevant if microdata does not contain ons_id.
+        Default is True.
     threshold : integer
         Suppression threshold; cells with perturbed counts below this value
         will be suppressed (set to NULL).
@@ -62,6 +67,26 @@ def create_perturbed_table_bigquery(client,
         threshold applied.
     """
     
+    query = build_perturbation_bigquery(data = data,
+                                        ptable = ptable,
+                                        geog = geog,
+                                        tab_vars = tab_vars,
+                                        record_key = record_key,
+                                        threshold = threshold
+                                        )
+    
+    # Generate record keys from "ons_id" if exists
+    columns = [field.name for field in client.get_table(data).schema]
+    
+    if use_existing_ons_id & ("ons_id" in columns):
+        print('NOTE: "ons_id" column is available in data!',
+              'Updating query to generate record keys from "ons_id"!')
+    
+        query = query.replace(
+            f"CAST({record_key} AS INT64)",
+            "MOD(SAFE_CAST(ons_id AS INT64), 4096)"
+            )
+    
     validate_inputs_bigquery(client = client,
                              data = data,
                              ptable = ptable,
@@ -70,14 +95,6 @@ def create_perturbed_table_bigquery(client,
                              record_key = record_key,
                              threshold = threshold
                              )
-    
-    query = build_perturbation_bigquery(data = data,
-                                        ptable = ptable,
-                                        geog = geog,
-                                        tab_vars = tab_vars,
-                                        record_key = record_key,
-                                        threshold = threshold
-                                        )
     
     perturbed_table = client.query(query).to_dataframe()
     
