@@ -75,7 +75,7 @@ def create_perturbed_table_bigquery(client,
                                         threshold = threshold
                                         )
     
-    # Generate record keys from "ons_id" if exists
+    # Update query to generate record keys from "ons_id" if exists
     columns = [field.name for field in client.get_table(data).schema]
     
     if use_existing_ons_id & ("ons_id" in columns):
@@ -93,6 +93,7 @@ def create_perturbed_table_bigquery(client,
                              geog = geog,
                              tab_vars = tab_vars,
                              record_key = record_key,
+                             use_existing_ons_id = use_existing_ons_id,
                              threshold = threshold
                              )
     

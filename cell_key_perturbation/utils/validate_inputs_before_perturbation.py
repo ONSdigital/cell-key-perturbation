@@ -62,13 +62,21 @@ def validate_inputs(data, ptable, geog, tab_vars, record_key, threshold):
 
 #%%# Validation with BigQuery
 
-def validate_inputs_bigquery(client, data, ptable, geog, tab_vars, record_key, threshold):
+def validate_inputs_bigquery(client, 
+                             data, 
+                             ptable, 
+                             geog, 
+                             tab_vars, 
+                             record_key, 
+                             use_existing_ons_id,
+                             threshold):
     """
     Validates BigQuery inputs for a perturbation process.
     
-    - Validate other input arguments
+    - Validate input arguments
+        - Check that geog and tab_vars are lists of strings
         - Check that at least one variable specified for geog or tab_vars
-        - Check variable is specified for record_key
+        - Check variable is specified for record_key or None
         - Check threshold is an integer   
     - Validate microdata and ptable contain required columns
         - Check data contain the specified geog, tab_vars & record_key
@@ -89,19 +97,26 @@ def validate_inputs_bigquery(client, data, ptable, geog, tab_vars, record_key, t
             Tabulation variable names
         record_key : str
             Name of the record key column
+        use_existing_ons_id : Boolean
+            Whether to create record keys from ons_id, if ons_id exists in data
         threshold : integer
             Suppression threshold
 
     Raises:
         ValueError, Exception or Warning message if any validation fails.
     """
+    existing_columns = [field.name for field in client.get_table(data).schema]
+    if use_existing_ons_id & ("ons_id" in existing_columns):
+        record_key = None
     
+# 1) Validate Input Arguments
     _check_input_arguments(geog, tab_vars, record_key, threshold)
 
-
+# 2) Validate microdata and ptable contain required columns
     # Check geog, tab_vars & record_key specified are columns in data
     required_columns = geog + tab_vars + [record_key]
-    existing_columns = [field.name for field in client.get_table(data).schema]
+    if use_existing_ons_id & ("ons_id" in existing_columns):
+        required_columns.remove(record_key)
     missing = [col for col in required_columns if col not in existing_columns]
     if missing:
         raise ValueError(f"Missing columns in '{data}': {missing}")
@@ -114,7 +129,7 @@ def validate_inputs_bigquery(client, data, ptable, geog, tab_vars, record_key, t
             raise ValueError(f"Missing column '{col}' in perturbation table '{ptable}'.")
 
 
-    # Check if the range of record keys and cell keys match
+# 3) Check if the range of record keys and cell keys match
     range_query = f"""
     WITH
         data_range AS (
@@ -136,6 +151,11 @@ def validate_inputs_bigquery(client, data, ptable, geog, tab_vars, record_key, t
         p.max_ckey
     FROM data_range d, ptable_range p;
     """
+    if use_existing_ons_id & ("ons_id" in existing_columns):
+        range_query = range_query.replace(
+            f"CAST({record_key} AS INT64)",
+            "MOD(SAFE_CAST(ons_id AS INT64), 4096)"
+            )
     keys_range = client.query(range_query).to_dataframe()
 
     min_rkey = keys_range["min_rkey"].iloc[0]
@@ -146,7 +166,7 @@ def validate_inputs_bigquery(client, data, ptable, geog, tab_vars, record_key, t
     _check_key_range(min_ckey, max_ckey, min_rkey, max_rkey)
 
 
-    # Check data has sufficient % records with record keys to apply perturbation
+# 4) Check data has sufficient % records with record keys to apply perturbation
     records_key_query = f"""
     SELECT
         COUNT(*) AS total_records,
@@ -154,6 +174,11 @@ def validate_inputs_bigquery(client, data, ptable, geog, tab_vars, record_key, t
         ROUND(100.0 * COUNTIF({record_key} IS NOT NULL) / COUNT(*), 2) AS percent_with_keys
     FROM `{data}`;
     """
+    if use_existing_ons_id & ("ons_id" in existing_columns):
+        records_key_query = records_key_query.replace(
+            f"{record_key}",
+            "MOD(SAFE_CAST(ons_id AS INT64), 4096)"
+            )
     rkey = client.query(records_key_query).to_dataframe()
     
     rkey_nan_count = rkey["null_record_keys"].iloc[0]
@@ -186,7 +211,7 @@ def _check_input_data_types(data, ptable):
 
 def _check_input_arguments(geog, tab_vars, record_key, threshold):
     """
-    Checks if required input arguments are specified
+    Checks if required input arguments are correctly specified
     
     Parameters:
     - geog (list): List of geographic variables
@@ -197,13 +222,29 @@ def _check_input_arguments(geog, tab_vars, record_key, threshold):
     Raises:
     - Exception if any validation fails.
     """
-    # Check that at least one variable specified for geog or tab_vars
-    if len(geog) == 0 and len(tab_vars) == 0:
-        raise Exception("No variables for tabulation. Please specify value for geog or tab_vars.")
+    if not isinstance(geog, list):
+        raise TypeError("Expected 'geog' to be a list, "
+                        f"but got '{type(geog).__name__}'!")
     
-    # Check variable is specified for record_key
-    if len(record_key) == 0:
-        raise Exception("Please specify a value for record_key.")
+    if not isinstance(tab_vars, list):
+        raise TypeError("Expected 'tab_vars' to be a list, "
+                        f"but got '{type(tab_vars).__name__}'!")
+    
+    if not all(isinstance(item, str) for item in geog):
+        raise TypeError("All items in geog list must be strings!")
+        
+    if not all(isinstance(item, str) for item in tab_vars):
+        raise TypeError("All items in tab_vars list must be strings!")
+    
+    # Check that at least one variable specified for geog or tab_vars
+    if len(geog + tab_vars) == 0:
+        raise Exception("No variables for tabulation.",
+                        "Please specify value for geog or tab_vars.")
+    
+    # Check variable is specified for record_key if not None
+    if record_key is not None and not isinstance(record_key, str):
+        raise TypeError("Expected 'record_key' to be str or None, "
+                        f"but got '{type(record_key).__name__}'!")
 
     # Check threshold is an integer  
     if not isinstance(threshold, int):
@@ -253,7 +294,7 @@ def _check_input_data_contain_columns(data, ptable, geog, tab_vars, record_key):
         raise Exception("Specified value(s) for geog must be column(s) in data.")
     if tab_vars and not all(item in data.columns for item in tab_vars):
         raise Exception("Specified value(s) for tab_vars must be column(s) in data.")
-    if record_key and record_key not in data.columns:
+    if record_key not in data.columns:
         raise Exception("Specified value for record_key must be a column in data.")
 
     # Check ptable contains required columns
