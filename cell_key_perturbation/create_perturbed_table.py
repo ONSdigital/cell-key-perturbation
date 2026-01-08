@@ -14,12 +14,14 @@ import pandas as pd
 import numpy as np
 
 from cell_key_perturbation.utils.validate_inputs_before_perturbation import validate_inputs
+from cell_key_perturbation.utils.generate_record_key import generate_record_key_from_ons_id
 
 def create_perturbed_table(data,
                            ptable,
                            geog,
                            tab_vars,
                            record_key,
+                           use_existing_ons_id = True,
                            threshold = 10
                            ):
     """
@@ -61,6 +63,13 @@ def create_perturbed_table(data,
     record_key: String
     The column name in 'data' that contains the record keys required for 
     perturbation. For example: "Record_Key"
+    If data contains "ons_id" and use_existing_ons_id = True,
+    set (record_key = None), as record key will be generated from "ons_id".
+    
+    use_existing_ons_id: Boolean
+    Whether to create record keys from ons_id, if ons_id exists in data.
+    It will be irrelevant if microdata does not contain ons_id.
+    Default is True.
     
     threshold: Integer
     Threshold below which cell counts are supressed. Counts below this value 
@@ -110,6 +119,15 @@ def create_perturbed_table(data,
     >>> perturbed_table
 
     """
+    #%%# Generate record keys from "ons_id" if exists
+    if use_existing_ons_id & ("ons_id" in data.columns):
+        print('NOTE: "ons_id" column is available in data!',
+              'Generating record keys from "ons_id"!')
+    
+        data = generate_record_key_from_ons_id(data, 
+                                               record_key_col="ons_record_key")
+        record_key = "ons_record_key"
+        
     #%%# Step 0: Validate Inputs
     validate_inputs(data, ptable, geog, tab_vars, record_key, threshold)
     
