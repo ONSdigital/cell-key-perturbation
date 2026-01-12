@@ -135,8 +135,8 @@ def validate_inputs_bigquery(client,
     WITH
         data_range AS (
             SELECT
-                MIN(CAST({record_key} AS INT64)) AS min_rkey,
-                MAX(CAST({record_key} AS INT64)) AS max_rkey
+                MIN(SAFE_CAST({record_key} AS INT64)) AS min_rkey,
+                MAX(SAFE_CAST({record_key} AS INT64)) AS max_rkey
             FROM `{data}`
         ),
         ptable_range AS (
@@ -154,7 +154,7 @@ def validate_inputs_bigquery(client,
     """
     if use_existing_ons_id & ("ons_id" in existing_columns):
         range_query = range_query.replace(
-            f"CAST({record_key} AS INT64)",
+            f"SAFE_CAST({record_key} AS INT64)",
             "MOD(SAFE_CAST(ons_id AS INT64), 4096)"
             )
     keys_range = client.query(range_query).to_dataframe()

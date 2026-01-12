@@ -85,7 +85,7 @@ def create_perturbed_table_bigquery(client,
               'Updating query to generate record keys from "ons_id"!')
     
         query = query.replace(
-            f"CAST({record_key} AS INT64)",
+            f"SAFE_CAST({record_key} AS INT64)",
             "MOD(SAFE_CAST(ons_id AS INT64), 4096)"
             )
     
