@@ -9,7 +9,7 @@ Create test data within a secure environment to test the cell key perturbation c
 import pandas as pd
 import numpy as np
 
-def generate_test_data(size = 1000, key_range = 256):
+def generate_test_data(size = 1000, key_range = 255):
     """
     Function to generate a sample microdata for testing purposes
     
@@ -18,7 +18,7 @@ def generate_test_data(size = 1000, key_range = 256):
     size : integer
         Number of rows in test data. Default is 1000.
     key_range : integer
-        Range for the record key. Default is 256.
+        Range for the record key. Default is 255.
         
     Returns:
         - (pd.DataFrame): Sample microdata with record_key
@@ -26,7 +26,7 @@ def generate_test_data(size = 1000, key_range = 256):
 
     np.random.seed(111)
     
-    record_key_sample = list(np.random.randint(0, key_range, size))
+    record_key_sample = list(np.random.randint(0, key_range + 1, size))
     
     var1 = list(np.random.choice([1,2,3,4,5], p=[0.25, 0.35, 0.2, 0.1, 0.1], size=(size)))
     var2 = list(np.random.choice([1,2], p=[0.5, 0.5], size=(size)))
