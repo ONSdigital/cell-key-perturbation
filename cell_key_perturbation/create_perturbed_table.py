@@ -11,7 +11,6 @@ Noise is added from the 'ptable' file, and counts below threshold
 """
 
 import pandas as pd
-import numpy as np
 
 from cell_key_perturbation.utils.validate_inputs_before_perturbation import validate_inputs
 from cell_key_perturbation.utils.generate_record_key import generate_record_key_from_ons_id
@@ -179,10 +178,11 @@ def create_perturbed_table(data,
     #%%# Step 5: Apply the perturbation and suppress counts less than the threshold
     aggregated_table["count"] = (aggregated_table["pre_sdc_count"] 
                                  + aggregated_table["pvalue"])
+    aggregated_table["count"] = aggregated_table["count"].astype("Int64")
     aggregated_table.loc[
         aggregated_table["count"] < threshold, 
         "count"
-    ] = np.nan
+    ] = pd.NA
 
     return aggregated_table
 
