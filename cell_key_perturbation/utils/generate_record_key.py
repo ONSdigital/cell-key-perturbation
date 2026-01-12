@@ -30,7 +30,7 @@ def generate_record_key_from_ons_id(data, record_key_col):
     return df
 
 
-def generate_random_rkey(data):
+def generate_random_rkey(data, key_range = 256):
     """
     Function to create and attach random record keys to microdata
     
@@ -38,6 +38,8 @@ def generate_random_rkey(data):
     -----------
     data : pandas.DataFrame
         Microdata to add random record keys
+    key_range : integer
+        Range for the record key. Default is 256.
         
     Returns:
     --------
@@ -50,7 +52,9 @@ def generate_random_rkey(data):
     df = data.copy()
     size = len(df.index)
     
-    record_key_sample = list(rng.integers(low = 0, high = 256, size = size))
+    record_key_sample = list(rng.integers(low = 0, 
+                                          high = key_range, 
+                                          size = size))
     
     df["record_key"] = record_key_sample
     

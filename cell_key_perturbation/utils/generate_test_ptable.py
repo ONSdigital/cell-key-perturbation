@@ -8,16 +8,23 @@ Created on Mon Sep 22 11:44:42 2025
 import pandas as pd
 import itertools
 
-def generate_ptable_10_5_rule():
+def generate_ptable_10_5_rule(max_pcv = 750, key_range = 256):
     """
     Function to generate a sample p-table based on 10-5 rule
+    
+    Parameters:
+    -----------
+    max_pcv : integer
+        Max value for pcv. Default is 750.
+    key_range : integer
+        Range for the cell key. Default is 256.
         
     Returns:
         - (pd.DataFrame): Perturbation table with columns 'pcv','ckey','pvalue'
     """
     # Generate all combinations of pcv (1 to 750) and ckey (0 to 255)
-    pcv_range = range(1, 751)
-    ckey_range = range(0, 256)
+    pcv_range = range(1, max_pcv + 1)
+    ckey_range = range(0, key_range)
     combinations = list(itertools.product(pcv_range, ckey_range))
     
     # Create the ptable

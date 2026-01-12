@@ -9,13 +9,24 @@ Create test data within a secure environment to test the cell key perturbation c
 import pandas as pd
 import numpy as np
 
-def generate_test_data():
+def generate_test_data(size = 1000, key_range = 256):
+    """
+    Function to generate a sample microdata for testing purposes
+    
+    Parameters:
+    -----------
+    size : integer
+        Max value for pcv. Default is 1000.
+    key_range : integer
+        Range for the record key. Default is 256.
+        
+    Returns:
+        - (pd.DataFrame): Sample microdata with record_key
+    """
 
     np.random.seed(111)
     
-    size=1000
-    
-    record_key_sample = list(np.random.randint(0,256,size))
+    record_key_sample = list(np.random.randint(0, key_range, size))
     
     var1 = list(np.random.choice([1,2,3,4,5], p=[0.25, 0.35, 0.2, 0.1, 0.1], size=(size)))
     var2 = list(np.random.choice([1,2], p=[0.5, 0.5], size=(size)))
@@ -48,64 +59,6 @@ def generate_test_data():
         })
 
     return micro
-
-"""
-#setting inputs: variables, geography, ptable file
-record_key="record_key"
-geog=["var1"]
-tab_vars=["var2","var3"]
-#ptable_10_5 = pd.read_csv("\\\\   ptable_location  \ptable_10_5_rule.csv")
-
-#microdata and the ptable need to be read in as dataframes
-#using filepaths may be unreliable as it's not known how the data will be stored, formated etc 
-
-#using pre-defined inputs:
-perturbed_table= create_perturbed_table(data=micro,
-                                    record_key=record_key,
-                                    geog=geog,
-                                    tab_vars=tab_vars,
-                                    ptable=ptable_10_5)
-perturbed_table
-###############
-
-#setting inputs: variables, geography, ptable file
-record_key="record_key"
-geog=["var4"]
-tab_vars=["var5"]
-#ptable_10_5 = pd.read_csv("\\\\   ptable_location  \ptable_10_5_rule.csv")
-
-#microdata and the ptable need to be read in as dataframes
-#using filepaths may be unreliable as it's not known how the data will be stored, formated etc 
-
-#using pre-defined inputs:
-perturbed_table= create_perturbed_table(data=micro,
-                                    record_key=record_key,
-                                    geog=geog,
-                                    tab_vars=tab_vars,
-                                    ptable=ptable_10_5)
-perturbed_table
-###############
-
-#setting inputs: variables, geography, ptable file
-record_key="record_key"
-geog=["var1"]
-tab_vars=["var5","var8"]
-#ptable_10_5 = pd.read_csv("\\\\   ptable_location  \ptable_10_5_rule.csv")
-
-#microdata and the ptable need to be read in as dataframes
-#using filepaths may be unreliable as it's not known how the data will be stored, formated etc 
-
-
-#using pre-defined inputs:
-perturbed_table= create_perturbed_table(data=micro,
-                                    record_key=record_key,
-                                    geog=geog,
-                                    tab_vars=tab_vars,
-                                    ptable=ptable_10_5)
-perturbed_table
-###############
-"""
-
 
 """
 Generating 1000 records using seed 111 in numpy, using the ptable_10_5_rule provided for testing, and passing geog=[”var1”] and 
