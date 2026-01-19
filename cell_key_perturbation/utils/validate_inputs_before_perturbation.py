@@ -74,6 +74,7 @@ def validate_inputs_bigquery(client,
     """
     Validates BigQuery inputs for a perturbation process.
     
+    - Check data and ptable locations are provided in string format
     - Validate input arguments
         - Check that geog and tab_vars are lists of strings
         - Check that at least one variable specified for geog or tab_vars
@@ -106,6 +107,11 @@ def validate_inputs_bigquery(client,
     Raises:
         ValueError, Exception or Warning message if any validation fails.
     """
+# 0) Check data and ptable locations are provided in string format
+    if (not isinstance(data, str)) or (not isinstance(ptable, str)):
+        raise TypeError("'data' and 'ptable' must be string type, "
+                        "specifying location of tables in BigQuery database!")
+
     existing_columns = [field.name for field in client.get_table(data).schema]
     if use_existing_ons_id & ("ons_id" in existing_columns):
         record_key = None
