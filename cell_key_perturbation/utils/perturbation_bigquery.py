@@ -78,7 +78,7 @@ def build_perturbation_bigquery(data,
         SELECT
             {all_vars_str},
             COUNT(*) AS pre_sdc_count,
-            SUM(CAST({record_key} AS INT64)) AS sum_rkey
+            SUM(SAFE_CAST({record_key} AS INT64)) AS sum_rkey
         FROM `{data}`
         GROUP BY {all_vars_str}
     ),

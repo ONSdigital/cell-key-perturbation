@@ -8,9 +8,9 @@
  | Support Area     | Statistical Disclosure Control                      | 
  | Method Theme     | Statistical Disclosure Control                      |
  | Status           | Ready to Use                                        |
- | Inputs           | data, ptable, record_key, geog, tab_vars, threshold |
- | Outputs          | frequency table with cell key perturbation applied  |
- | Method Version   | 3.0.0                                               |
+ | Inputs           | (client), data, ptable, geog, tab_vars, record_key, use_existing_ons_id, threshold |
+ | Outputs          | Frequency table with cell key perturbation applied  |
+ | Method Version   | 3.1.0                                               |
  | Code Repository  | [https://github.com/ONSdigital/cell-key-perturbation](https://github.com/ONSdigital/cell-key-perturbation) |
  
 ## Summary
@@ -36,7 +36,7 @@ Cell key perturbation is currently available using Python and BigQuery.
 
 ### BigQuery
 
-BigQuery version allow users to perform perturbation without reading raw data into local memory. The package would craete the frequency table and run perturbation with a SQL query. Then, it converts the final perturbed table into a pandas dataframe as an output. 
+The BigQuery version allows users to perform perturbation without reading raw data into local memory. The package creates the frequency table and runs perturbation with an SQL query. Then, it converts the final perturbed table into a pandas dataframe as an output. 
 
 This will allow users to run the method on large datasets without breaking the memory limits. 
 
@@ -46,9 +46,9 @@ This will allow users to run the method on large datasets without breaking the m
 - ***Record key*** - A random number assigned to each record 
 - ***Cell value*** - The number of records or frequency for a cell
 - ***Cell key*** - The sum of record keys for a given cell
-- ***pvalue*** - perturbation value. The value of noise added to cells, e.g. +1, -1
-- ***pcv*** - perturbation cell value. This is an amended cell value needed to merge on the ptable
-- ***ptable*** - perturbation table. The look-up file containing the pvalues, this determines which cells get perturbed and by how much.
+- ***pvalue*** - Perturbation value. The value of noise added to cells, e.g. +1, -1
+- ***pcv*** - Perturbation cell value. This is an amended cell value needed to merge on the ptable
+- ***ptable*** - Perturbation table. The look-up file containing the pvalues, this determines which cells get perturbed and by how much.
 
 
 # User Notes
@@ -72,12 +72,19 @@ pip install cell_key_perturbation
 - This method requires microdata and a perturbation table (ptable) file. 
 - The microdata and the ptable both need to be supplied as pandas dataframes or BigQuery tables.
 - The microdata must include a record key variable for cell key perturbation to be applied.
+- The specific ptable provided with the microdata you are working with needs to be used e.g. `ptable_census21` for census 2021.
 
 ### Microdata and Record Keys
 
 **Microdata** must be row-level, i.e. one row per statistical unit such as person or household. **Microdata** must contain one column per variable, which are expected to be categorical (they can be numeric but categorical is more suitable for frequency tables). 
 
-**Record keys** should already be attached to the **microdata** as a column of integers in the range 0-255 or 0-4095. The name of the **record key** column could change in different **microdata** tables. For example, **record key** columns in census data tables are named as `resident_record_key`, `household_record_key`, or `family_record_key` depending on the table type.
+**Record keys** should already be attached to the **microdata** as a column of integers in the range 0-255 or 0-4095, except certain ONS datasets with `ons_id`. 
+The name of the **record key** column could change in different **microdata** tables. 
+For example, **record key** columns in census data tables are named as `resident_record_key`, `household_record_key`, or `family_record_key` depending on the table type.
+
+Certain ONS datasets contain `ons_id` column and use it as the basis for record keys to keep the perturbation consistent. 
+If `ons_id` is available as a column in **microdata**, then **record keys** will be derived from `ons_id` by default. 
+(This can be switched off by setting `use_existing_ons_id = False`)
 
 The range of **record keys** should match the range of **cell keys** in the **ptable**. A warning message will be generated if those ranges do not match.
 
@@ -89,7 +96,7 @@ Cell Key Perturbation is consistent and repeatable, so the same cells are always
 
 The **perturbation table** contains the parameters which determine which cells are perturbed by how much and which are not (most cells are perturbed by +0). The **ptable** contains each possible combination of **cell key** (`ckey`) and **cell value** (`pcv`), and the **perturbation value** (`pvalue`) for each combination. 
 
-A sample **ptable** that applies the '10-5 rule' is provided with the package and works with **record keys** in the range 0-255. This **ptable** will remove all cells \<10, and round all others to the nearest 5. This provides more protection than necessary but will ensure safe outputs.
+A sample **ptable** that applies the '10-5 rule' is provided with the package and works with **record keys** in the range 0-255. This **ptable** will remove all cells below the threshold of 10, and round all others to the nearest 5. This provides more protection and will ensure safe outputs.
 
 Other **ptables** may be available depending on the **microdata** used, for example census 2021 data will require the `ptable_census21` to be used and is based on cell keys in the range 0-255.
 
@@ -112,10 +119,10 @@ You can then call the method using the following parameters:
 
 ```python
 # for pandas
-create_perturbed_table(data, ptable, geog, tab_vars, record_key, threshold)
+create_perturbed_table(data, ptable, geog, tab_vars, record_key, use_existing_ons_id, threshold)
 
 # for BigQuery
-create_perturbed_table_bigquery(client, data, ptable, geog, tab_vars, record_key, threshold)
+create_perturbed_table_bigquery(client, data, ptable, geog, tab_vars, record_key, use_existing_ons_id, threshold)
 ```
 
 Parameters specific for BigQuery version:
@@ -131,7 +138,8 @@ perturbation is applied.
 Common parameters for both versions:
 - **`geog`** - (Geography) - a string vector giving the column name in `data` that contains the desired geography level you wish to tabulate at, e.g. `["Local_Authority", "Ward"]`. This can be the empty vector, `geog=[]`, if no geography level is required.
 - **`tab_vars`** - (Variables to tabulate) - a string vector giving the column names in `data` of the variables to be tabulated e.g. `["Age","Health","Occupation"]`. This can also be the empty vector, `tab_vars=[]`. However, at least one of `tab_vars` or `geog` must be populated. if both are left blank an error message will be returned.
-- **`record_key`** - a string containing the column name in `data` giving the record keys required for perturbation. 
+- **`record_key`** - a string containing the column name in `data` giving the record keys required for perturbation. If `ons_id` is available as a column in `data` and `use_existing_ons_id = True`, this should be specified as `None`.
+- **`use_existing_ons_id`** - `True` or `False`, with a default of `True`. If `ons_id` is available as a column in `data`, then record keys will be derived from `ons_id` by default.
 - **`threshold`** - the value below which a count is suppressed (default 10).
 
 ## How to Use the Method in BigQuery
@@ -167,6 +175,16 @@ perturbed_table = create_perturbed_table_bigquery(client = client,
                                                   tab_vars = tab_vars,
                                                   record_key = record_key,
                                                   threshold = threshold)
+
+# or
+perturbed_table = create_perturbed_table_bigquery(client = client,
+                                                  data = microdata,
+                                                  ptable = ptable,
+                                                  geog = geog,
+                                                  tab_vars = tab_vars,
+                                                  record_key = None,
+                                                  use_existing_ons_id = True,
+                                                  threshold = threshold)
 ```
 
 5. The returned `perturbed_table` is a `pandas.DataFrame`. You need to drop disclosive columns before exporting the output from the secure data environment. Please refer to the **"Interpreting the Output"** and **"Saving the Output"** sections below for more details.
@@ -177,9 +195,7 @@ output_table = perturbed_table.drop(columns = ["pre_sdc_count", "ckey", "pcv", "
 
 ## Worked Example with Synthetic Data in pandas
 
-This is an example showing how to create a perturbed table from sample data 
-generated with provided test data generation functions in this package 
-in order to showcase the method.
+This is an example showing how to create a perturbed table from test data. The test data can be generated using functions available in this package.
 
 To generate example microdata and a perturbation table for testing purposes, 
 use the following code:
@@ -188,8 +204,8 @@ use the following code:
 from cell_key_perturbation.utils.generate_test_data import generate_test_data
 from cell_key_perturbation.utils.generate_test_ptable import generate_ptable_10_5_rule
 
-microdata = generate_test_data()
-ptable_10_5 = generate_ptable_10_5_rule()
+microdata = generate_test_data(size = 1000, key_range = 255)
+ptable_10_5 = generate_ptable_10_5_rule(key_range = 255)
 ```
 
 **NOTE:** Generated test microdata contains record keys. If you are testing perturbation with another microdata, you can generate and attach random record keys in the range 0-255 as following:
@@ -197,7 +213,7 @@ ptable_10_5 = generate_ptable_10_5_rule()
 ```python
 from cell_key_perturbation.utils.generate_record_key import generate_random_rkey
 
-microdata = generate_random_rkey(microdata)
+microdata = generate_random_rkey(microdata, key_range = 255)
 ```
 
 - **`microdata`**: A sample `pandas.DataFrame` containing randomly generated microdata and record keys.
@@ -246,7 +262,13 @@ perturbed_table = create_perturbed_table(data = microdata,
 The output from the code is a `pandas.DataFrame` containing a frequency table with 
 the counts having been affected by perturbation, as specified in the ptable. 
 
-For most ptables, the most obvious effect will be that all counts less than the threshold will have been removed. Removing counts below a threshold is a condition of exporting data from IDS and many other secure environments.
+For most ptables, the most obvious effect will be that all counts lower than the 
+threshold of 10 will have been removed. Supressing counts below the threshold is a 
+condition that need to be met when exporting data from IDS and many other secure 
+environments such as SRS.
+
+The perturbation code will treat categories for missing data in the same way as it treats other categories. 
+If you would like to exclude missing data from your outputs, you will need to remove the missing data categories either before or after applying the perturbation.
 
 The table will be in the following format:
 
@@ -280,7 +302,7 @@ contingency table is published. Otherwise, the perturbation can be unpicked and 
 
 ## Saving the Output
 
-Before the data are ready to be output the disclosive columns must be dropped. These cannot be output as they would allow for the perturbation to be unpicked. This code assumes that you have not changed the default column names; please update it if you have. `drop()` will work on a list of column names in this case, and this code puts it in a new dataframe.
+Before the table is ready to be published the disclosive columns must be dropped. These cannot be output as they would allow for the perturbation to be unpicked. This code assumes that you have not changed the default column names; please update it if you have. `drop()` will work on a list of column names in this case, and this code puts it in a new dataframe.
 
 ```python
 output_table = perturbed_table.drop(columns = ["pre_sdc_count", "ckey", "pcv", "pvalue"])
@@ -292,7 +314,9 @@ To save this dataframe as a csv use the pandas to_csv method:
 output_table.to_csv(“yourfilename.csv”, index = False)
 ```
 
-Your file name should end “.csv”. If you only specify a file name in the path it will save to your main directory. Setting ‘index’ to ‘False’ here stops it from adding a new ‘index’ column with the row number. Take that part out if you do want an index column.
+Your file name should end “.csv”. If you only specify a file name in the path it will save to your main directory. 
+Setting ‘index’ to ‘False’ here stops it from adding a new ‘index’ column with the row number. 
+This argument can be removed if you do want to create an index column.
 
 
 # Methodolgy - Statistical Process Flow
@@ -304,7 +328,7 @@ determine which cells get perturbed and by how much.
 The **microdata** needs to contain a column for **record key**. **Record keys** are 
 random, uniformly distributed integers within the chosen range. Previously, 
 **record keys** between 0-255 have been used (as for census-2021). The method has 
-been extended to also handle **record keys** in the range 0-4096 for the purpose of 
+been extended to also handle **record keys** in the range 0-4095 for the purpose of 
 processing administrative data. 
 
 It is expected that users will tabulate 1-4 variables for a particular geography 
@@ -343,7 +367,7 @@ specify the value for the **threshold**, but if they do not, the default value o
 applied.
 
 As well as specifying the level of perturbation, the **ptable** can also be used 
-to apply rounding, and a ***threshold** for small counts. The example **ptable** 
+to apply rounding, and a **threshold** for small counts. The example **ptable** 
 supplied with this method, `ptable_10_5`, applies the 10_5 rule (supressing 
 values less than 10 and rounding others to the nearest 5) for **record keys** 
 in the range 0-255.
