@@ -10,7 +10,7 @@
  | Status           | Ready to Use                                        |
  | Inputs           | (client), data, ptable, geog, tab_vars, record_key, use_existing_ons_id, threshold |
  | Outputs          | Frequency table with cell key perturbation applied  |
- | Method Version   | 3.1.0                                               |
+ | Method Version   | 3.2.0                                               |
  | Code Repository  | [https://github.com/ONSdigital/cell-key-perturbation](https://github.com/ONSdigital/cell-key-perturbation) |
  
 ## Summary
@@ -30,19 +30,25 @@ a real person, or is caused by the perturbation.
 Cell Key Perturbation is consistent and repeatable, so the same cells are 
 always perturbed in the same way.
 
-It is expected that users will tabulate 1 to 4 variables for a particular geography level - for example, tabulate age by sex at local authority level. 
+It is expected that users will tabulate 1 to 4 variables for a particular 
+geography level - for example, tabulate age by sex at local authority level. 
 
-Cell key perturbation is currently available using Python and BigQuery. 
+Full details of the methodology and statistical process flow are given in the [Methodology](#methodology) section.
+
+Cell Key Perturbation method is available in [Python](https://github.com/ONSdigital/cell-key-perturbation) and 
+[R](https://github.com/ONSdigital/cell-key-perturbation-R), each with integrated BigQuery functionality.
 
 ### BigQuery
 
-The BigQuery version allows users to perform perturbation without reading raw data into local memory. The package creates the frequency table and runs perturbation with an SQL query. Then, it converts the final perturbed table into a pandas dataframe as an output. 
+The BigQuery version allows users to perform perturbation without reading raw data into local memory. 
+The package creates the frequency table and runs perturbation with an SQL query. 
+Then, it converts the final perturbed table into a `pandas.DataFrame`/`data.table` as an output. 
 
 This will allow users to run the method on large datasets without breaking the memory limits. 
 
 ### Terminology
 
-- ***Microdata*** - data at the level of individual respondents
+- ***Microdata*** - Data at the level of individual respondents
 - ***Record key*** - A random number assigned to each record 
 - ***Cell value*** - The number of records or frequency for a cell
 - ***Cell key*** - The sum of record keys for a given cell
@@ -50,29 +56,12 @@ This will allow users to run the method on large datasets without breaking the m
 - ***pcv*** - Perturbation cell value. This is an amended cell value needed to merge on the ptable
 - ***ptable*** - Perturbation table. The look-up file containing the pvalues, this determines which cells get perturbed and by how much.
 
-
-# User Notes
-
-## Finding and Installing the method
-
-This method requires Python 3.7 or above and uses the pandas package.
-
-><sub>To prevent downgrading software on your system, we recommend creating a virtual environment to install and run SML methods. This will enable you to install the method with the required version of Python, etc, without disrupting the newer versions you may be running on your system. </sub>
-
-
-The method package can be installed from PyPI/Artifactory using the following 
-code in the terminal or command prompt:
-
-```py
-pip install cell_key_perturbation
-```
-
 ## Requirements 
 
 - This method requires microdata and a perturbation table (ptable) file. 
-- The microdata and the ptable both need to be supplied as pandas dataframes or BigQuery tables.
-- The microdata must include a record key variable for cell key perturbation to be applied.
-- The specific ptable provided with the microdata you are working with needs to be used e.g. `ptable_census21` for census 2021.
+- The microdata and the ptable both need to be supplied as `pandas.DataFrame`/`data.table` or BigQuery tables.
+- The microdata must include a record key variable for cell key perturbation to be applied, unless `ons_id` will be used to create record key.
+- You must use the provided ptable that corresponds to your microdata, e.g. `ptable_census21` for census 2021.
 
 ### Microdata and Record Keys
 
@@ -102,6 +91,22 @@ Other **ptables** may be available depending on the **microdata** used, for exam
 
 **You must use the specific **ptable** provided with the **microdata** you are working with to ensure sufficient and consistent protection, e.g. `ptable_census21` for census 2021.**
 
+
+# User Instructions
+
+## Installing the SML method
+
+This method requires Python 3.7 or above and uses the pandas package.
+
+><sub>To prevent downgrading software on your system, we recommend creating a virtual environment to install and run SML methods. This will enable you to install the method with the required version of Python, etc, without disrupting the newer versions you may be running on your system. </sub>
+
+
+The method package can be installed from PyPI/Artifactory using the following 
+code in the terminal or command prompt:
+
+```py
+pip install cell_key_perturbation
+```
 
 ## Using the SML method
 
@@ -319,7 +324,7 @@ Setting ‘index’ to ‘False’ here stops it from adding a new ‘index’ c
 This argument can be removed if you do want to create an index column.
 
 
-# Methodolgy - Statistical Process Flow
+# Methodology
 
 The user is required to supply **microdata** and to specify which columns in the
 data they want to tabulate by. They must also supply a **ptable** which will 
