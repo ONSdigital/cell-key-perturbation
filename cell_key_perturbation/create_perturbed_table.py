@@ -14,6 +14,7 @@ import pandas as pd
 
 from cell_key_perturbation.utils.validate_inputs_before_perturbation import validate_inputs
 from cell_key_perturbation.utils.generate_record_key import generate_record_key_from_ons_id
+from cell_key_perturbation.utils.check_for_na import check_for_na
 
 def create_perturbed_table(data,
                            ptable,
@@ -183,6 +184,8 @@ def create_perturbed_table(data,
         aggregated_table["count"] < threshold, 
         "count"
     ] = pd.NA
+    
+    check_for_na(aggregated_table, cols = geog + tab_vars)
 
     return aggregated_table
 
