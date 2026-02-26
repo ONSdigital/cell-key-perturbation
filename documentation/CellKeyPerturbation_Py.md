@@ -10,7 +10,7 @@
  | Status           | Ready to Use                                        |
  | Inputs           | (client), data, ptable, geog, tab_vars, record_key, use_existing_ons_id, threshold |
  | Outputs          | Frequency table with cell key perturbation applied  |
- | Method Version   | 3.2.0                                               |
+ | Method Version   | 3.1.0                                               |
  | Code Repository  | [https://github.com/ONSdigital/cell-key-perturbation](https://github.com/ONSdigital/cell-key-perturbation) |
  
 ## Summary
