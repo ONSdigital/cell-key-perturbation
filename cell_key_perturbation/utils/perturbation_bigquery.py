@@ -55,7 +55,8 @@ def build_perturbation_bigquery(data,
     dim_ctes_str = ",\n\t".join(dim_ctes)
 
     cross_join = "\n\tCROSS JOIN ".join([f"dim_{v}" for v in all_vars])
-    join_conditions = " AND ".join([f"g.{v} = b.{v}" for v in all_vars])
+    join_conditions = "\n\t\tAND ".join([f"g.{v} IS NOT DISTINCT FROM b.{v}" 
+                                         for v in all_vars])
     select_columns = ", ".join([f"g.{v}" for v in all_vars])
 
     query = f"""
@@ -97,7 +98,10 @@ def build_perturbation_bigquery(data,
 -- Step 5: Compute cell key modulo
     ckey_mod AS (
         SELECT *,
-            MOD(sum_rkey, (SELECT MAX(ckey) + 1 FROM `{ptable}`)) AS ckey
+            MOD(sum_rkey, 
+                (SELECT MAX(ckey) + 1 
+                 FROM `{ptable}`)
+            ) AS ckey
         FROM full_counts
     ),
 

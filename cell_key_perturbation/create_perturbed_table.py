@@ -132,7 +132,7 @@ def create_perturbed_table(data,
     
     #%%# Step 1: Create frequency table
     count_df = (
-        data.groupby(geog + tab_vars)
+        data.groupby(geog + tab_vars, dropna = False)
             .size()
             .reset_index(name='pre_sdc_count')
     )
