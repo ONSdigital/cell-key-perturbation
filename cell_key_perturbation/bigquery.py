@@ -3,6 +3,7 @@ import pandas as pd
 
 from cell_key_perturbation.utils.perturbation_bigquery import build_perturbation_bigquery
 from cell_key_perturbation.utils.validate_inputs_before_perturbation import validate_inputs_bigquery
+from cell_key_perturbation.utils.check_for_na import check_for_na
 
 def create_perturbed_table_bigquery(client,
                                     data,
@@ -105,5 +106,7 @@ def create_perturbed_table_bigquery(client,
         perturbed_table.sort_values(geog + tab_vars)
                        .reset_index(drop=True)
     )
+    
+    check_for_na(perturbed_table, cols = geog + tab_vars)
     
     return perturbed_table

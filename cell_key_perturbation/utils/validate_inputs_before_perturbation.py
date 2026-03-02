@@ -177,13 +177,13 @@ def validate_inputs_bigquery(client,
     records_key_query = f"""
     SELECT
         COUNT(*) AS total_records,
-        COUNTIF({record_key} IS NULL) AS null_record_keys,
-        ROUND(100.0 * COUNTIF({record_key} IS NOT NULL) / COUNT(*), 2) AS percent_with_keys
+        COUNTIF(SAFE_CAST({record_key} AS INT64) IS NULL) AS null_record_keys,
+        ROUND(100.0 * COUNTIF(SAFE_CAST({record_key} AS INT64) IS NOT NULL) / COUNT(*), 2) AS percent_with_keys
     FROM `{data}`;
     """
     if use_existing_ons_id & ("ons_id" in existing_columns):
         records_key_query = records_key_query.replace(
-            f"{record_key}",
+            f"SAFE_CAST({record_key} AS INT64)",
             "MOD(SAFE_CAST(ons_id AS INT64), 4096)"
             )
     rkey = client.query(records_key_query).to_dataframe()
